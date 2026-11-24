@@ -27,6 +27,16 @@
     const allSongElements = {};
     let currentDecadeKey = null;
 
+    // Fisher–Yates on a copy: every running order equally likely.
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
     function updateStorage(decadeKey, title, isMarked) {
       const key = `bingoState_${decadeKey}`;
       const saved = JSON.parse(localStorage.getItem(key)) || { songs: [], marked: [] };
@@ -54,7 +64,7 @@
       let state = JSON.parse(localStorage.getItem(`bingoState_${key}`));
       if (!state || !state.songs.length) {
         state = {
-          songs: [...original].sort(() => Math.random() - 0.5),
+          songs: shuffle(original),
           marked: []
         };
         localStorage.setItem(`bingoState_${key}`, JSON.stringify(state));

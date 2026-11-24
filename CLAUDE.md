@@ -32,10 +32,14 @@ strings, including curly vs straight apostrophes). Edit all three together when 
 positions 1–25 across the grid and position 13 (FREE) skipped. Used to verify a winning card —
 `bingo.html` and `index.html` must keep the same algorithm.
 
+## Shuffling
+
+Every page that randomises songs (`bingo.html`, `index.html`, `livelist*.html`) uses Fisher–Yates on
+a copy of the list. Don't use `sort(() => Math.random() - 0.5)`: it's biased.
+
 ## Known quirks
 
-- `livelist.html` / `livelist_spot.html` still shuffle the running order with
-  `sort(() => Math.random() - 0.5)`, which is biased (songs near the top of the list tend to stay
-  near the top). `bingo.html` and `index.html` use Fisher–Yates on a copy.
+- `list_links_spot.js` only has Spotify links for the 1970s and 1980s; the 1990s and 2000s entries
+  (100 songs) are still Apple Music links, so `livelist_spot.html` opens Apple Music for those games.
 - `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
 - Printed card numbers/checksums from `bingo.html` are random per load — reprinting gives different cards.
