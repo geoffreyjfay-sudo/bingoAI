@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Decades Bingo Song Checklist</title>
@@ -6,19 +8,29 @@
 </head>
 <body>
   <h1>Decades Bingo Song Checklist</h1>
+  <p id="service"></p>
   <div class="decade-buttons" id="decadeSelector"></div>
   <div id="counter"></div>
   <button class="action" onclick="nextRandomSong()">Next Random Song</button>
   <button class="action" onclick="resetGame()">Start Over</button>
   <div id="checklist"></div>
 
-  <script src="list_links.js"></script>
+  <script src="songs.js"></script>
   <script>
+    // Which streaming service the song links open: livelist.html (Apple Music) or
+    // livelist.html?service=spotify. Both share the same saved game.
+    const SERVICES = { apple: "Apple Music", spotify: "Spotify" };
+    const service = new URLSearchParams(location.search).get("service") === "spotify" ? "spotify" : "apple";
+    const other = service === "apple" ? "spotify" : "apple";
+    document.getElementById("service").innerHTML =
+      `Links open in <strong>${SERVICES[service]}</strong> · <a href="?service=${other}">switch to ${SERVICES[other]}</a>`;
+
+    const withLinks = name => SONGS[name].map(s => [s.title, s[service]]);
     const decades = [
-      { name: "1970s", key: "songs70", original: songs70 },
-      { name: "1980s", key: "songs80", original: songs80 },
-      { name: "1990s", key: "songs90", original: songs90 },
-      { name: "2000s", key: "songs00", original: songs00 }
+      { name: "1970s", key: "songs70", original: withLinks("1970s") },
+      { name: "1980s", key: "songs80", original: withLinks("1980s") },
+      { name: "1990s", key: "songs90", original: withLinks("1990s") },
+      { name: "2000s", key: "songs00", original: withLinks("2000s") }
     ];
 
     const checklistContainer = document.getElementById("checklist");

@@ -130,3 +130,9 @@ button.action {
     width: 80%;
   }
 }
+
+#service {
+  text-align: center;
+  margin: 0 0 15px;
+  color: #555;
+}

@@ -13,18 +13,19 @@ Plain static HTML/CSS/JS — no build step, no package manager, no tests. Serve 
 |---|---|---|
 | `bingo.html` + `bingo.css` | Host, before the event | Generates 50 printable A4 pages × 4 cards (200 cards), one per decade per page, each with a card number and checksum. Ends with a report page: duplicate checksums, song usage counts, unused songs, Chart.js bar chart. Print to PDF. |
 | `index.html` + `bingoplay.css` | Players, on their phones | Digital card. Pick a decade, get a random 24-song card, tap to mark. State kept in `localStorage` (`bingoState_1970s` etc., plus `bingoLastDecade` so a reload resumes the decade the player was on). |
-| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade with links to Apple Music. Clicking a link/checkbox marks the song played (locked). "Next Random Song" highlights an unplayed track. State in `localStorage` (`bingoState_songs70` etc.): the running order as titles plus marked titles. Links are looked up from the loaded list at render time, so both live list pages share one game. Older saves holding `[title, link]` pairs are converted on load. |
-| `livelist_spot.html` | Host | Same as `livelist.html` but loads Spotify links (`list_links_spot.js`). |
+| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade. Links open Apple Music by default, or Spotify with `livelist.html?service=spotify` (switch link at the top). Clicking a link/checkbox marks the song played (locked). "Next Random Song" highlights an unplayed track. State in `localStorage` (`bingoState_songs70` etc.): the running order as titles plus marked titles, shared by both services. Links are looked up at render time. Older saves holding `[title, link]` pairs are converted on load. |
+| `livelist_spot.html` | — | Redirect to `livelist.html?service=spotify`, kept so old bookmarks work. |
 | `checklist.html` | Host | Printable A4-landscape tick-list of all songs per decade. |
 
-## Data files
+## Song data
 
-- `song_arrays.js` — `songs70/80/90/00` as plain title arrays. Used by `bingo.html`, `index.html` and `checklist.html`.
-- `list_links.js` — same songs as `[title, appleMusicUrl]` pairs.
-- `list_links_spot.js` — same songs as `[title, spotifyUrl]` pairs.
+`songs.js` is the only song file. `SONGS["1970s"]` (etc.) is a list of
+`{ title, apple, spotify }`; it also defines `songs70/80/90/00` as plain title lists for the card
+pages. Every page loads it.
 
-**Song titles must match exactly across all three files** (checksums and marking compare raw
-strings, including curly vs straight apostrophes). Edit all three together when changing a song.
+Title style: standard title case, straight apostrophes (`'`) only, official song titles. Titles are
+compared as raw strings for checksums, marks and saved games, so renaming a song changes card
+checksums and what every batch seed produces, and drops that song's mark from saved games.
 
 ## Checksum
 
