@@ -21,6 +21,10 @@
     <button data-decade="2010s" onclick="switchDecade('2010s')">🎧 GAME 7 : <b>2010s</b></button>
     <button data-decade="2020s" onclick="switchDecade('2020s')">🔊 GAME 8 : <b>2020s</b></button>
   </div>
+  <div id="pattern-bar">
+    <label>Playing for <select id="pattern-select"></select></label>
+    <span class="small">change it when the host announces</span>
+  </div>
 </div>
   </div>
 
@@ -43,7 +47,19 @@
     let cards = null;     // the page's eight cards, in decade order
     let currentCard = null;
     let tileEls = [];     // the 25 squares on screen, row by row
-    let shownLines = 0;   // completed lines last time we looked, to celebrate only new ones
+    let shownWins = 0;    // completed shapes last time we looked, to celebrate only new ones
+    const patternSelect = document.getElementById("pattern-select");
+    patternSelect.innerHTML = PATTERNS.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+    patternSelect.addEventListener("change", () => {
+      localStorage.setItem(`bingoPattern_${currentDecade}`, patternSelect.value);
+      shownWins = 0;
+      updateWin(true);
+    });
+
+    // The pattern this game is being played for (each game remembers its own; "Any line" to start).
+    function getPattern(decade) {
+      return patternById(localStorage.getItem(`bingoPattern_${decade}`)).id;
+    }
 
     function randomPage() {
       return FIRST_PHONE_PAGE + Math.floor(Math.random() * (LAST_PHONE_PAGE - FIRST_PHONE_PAGE + 1));
@@ -77,7 +93,10 @@
     }
 
     function clearMarks() {
-      allDecades.forEach(decade => localStorage.removeItem(`bingoState_${decade}`));
+      allDecades.forEach(decade => {
+        localStorage.removeItem(`bingoState_${decade}`);
+        localStorage.removeItem(`bingoPattern_${decade}`);
+      });
     }
 
     function renderCard(card, marked) {
@@ -114,31 +133,30 @@
         `<span class="small">Shout BINGO and give the host your card number.</span>`;
     }
 
-    // Highlights any completed line (row, column or diagonal) from the player's own marks and shows a
-    // BINGO banner. The host still checks the card against the songs actually played.
+    // Highlights the completed pattern (from the player's own marks, for the pattern they picked) and
+    // shows a banner. The host still checks the card against the songs actually played.
     function updateWin(celebrate) {
-      const result = checkCard(currentCard, getMarks(currentDecade));
-      const winCells = new Set(BINGO_LINES.filter(l => result.lines.includes(l.name)).flatMap(l => l.cells));
+      const result = checkPattern(currentCard, getMarks(currentDecade), getPattern(currentDecade));
+      const winCells = new Set(result.cells);
       tileEls.forEach((tile, i) => tile.classList.toggle("win", winCells.has(i)));
 
       const banner = document.getElementById("win-banner");
-      if (!result.lines.length) {
+      if (!result.won.length) {
         banner.hidden = true;
         banner.classList.remove("pop");
-        shownLines = 0;
+        shownWins = 0;
         return;
       }
+      const detail = ["line", "two-lines"].includes(result.pattern.id) ? ` ${result.won[0]}` : "";
       banner.hidden = false;
-      banner.innerHTML = result.fullHouse
-        ? `<strong>FULL HOUSE!</strong><br>Shout it and give the host card <strong>${currentCard.number}</strong>`
-        : `<strong>BINGO!</strong> ${result.lines.join(", ")}<br>Shout it and give the host card <strong>${currentCard.number}</strong>`;
-      banner.classList.remove("pop"); // only animate for a newly completed line
-      if (celebrate && result.lines.length > shownLines) {
+      banner.innerHTML = `<strong>${result.pattern.shout}</strong>${detail}<br>Shout it and give the host card <strong>${currentCard.number}</strong>`;
+      banner.classList.remove("pop"); // only animate for a newly completed pattern
+      if (celebrate && result.won.length > shownWins) {
         void banner.offsetWidth; // restart the animation
         banner.classList.add("pop");
         if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
       }
-      shownLines = result.lines.length;
+      shownWins = result.won.length;
     }
 
     function switchDecade(decade) {
@@ -147,8 +165,9 @@
       localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
       document.querySelectorAll("#decade-buttons button").forEach(b => b.classList.toggle("active", b.dataset.decade === decade));
+      patternSelect.value = getPattern(decade);
       renderCard(cards[allDecades.indexOf(decade)], getMarks(decade));
-      shownLines = 0;
+      shownWins = 0;
       updateWin(false);
     }
 

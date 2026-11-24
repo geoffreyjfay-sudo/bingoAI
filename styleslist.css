@@ -221,3 +221,28 @@ button.action {
   color: #fff;
   font-weight: bold;
 }
+
+/* Pattern this game is played for */
+#pattern-bar {
+  text-align: center;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+
+#pattern-bar select {
+  font-size: 1em;
+  padding: 4px 8px;
+  margin-left: 4px;
+}
+
+#pattern-bar .hint {
+  display: block;
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* Squares in the completed pattern */
+.check-grid td.win {
+  outline: 3px solid #ffd600;
+  outline-offset: -3px;
+}

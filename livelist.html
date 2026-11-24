@@ -11,6 +11,10 @@
   <p id="service"></p>
   <div class="decade-buttons" id="decadeSelector"></div>
   <div id="counter"></div>
+  <div id="pattern-bar">
+    <label>This game is for <select id="pattern-select"></select></label>
+    <span class="hint">announce it so players set the same on their phones</span>
+  </div>
   <button class="action" onclick="nextRandomSong()">Next Random Song</button>
   <button class="action" onclick="undoLastPlayed()">Undo Last Played</button>
   <button class="action" onclick="resetGame()">Start Over</button>
@@ -22,7 +26,7 @@
       <label>Card # <input type="number" id="check-card" min="1" required></label>
       <button type="submit">Check</button>
     </form>
-    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 400). Songs are checked against what's been played in that card's game.</p>
+    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 400). Songs are checked against what's been played in that card's game, for the pattern chosen for that game.</p>
     <div id="card-check-result"></div>
   </section>
   <div id="checklist"></div>
@@ -68,11 +72,28 @@
       localStorage.setItem(key, JSON.stringify(saved));
     }
 
+    // Which pattern each game is played for, saved with that game ("Any line" until changed).
+    const patternSelect = document.getElementById("pattern-select");
+    patternSelect.innerHTML = PATTERNS.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+
+    function getPattern(decadeKey) {
+      const saved = JSON.parse(localStorage.getItem(`bingoState_${decadeKey}`)) || {};
+      return patternById(saved.pattern).id;
+    }
+
+    patternSelect.addEventListener("change", () => {
+      const key = `bingoState_${currentDecadeKey}`;
+      const saved = JSON.parse(localStorage.getItem(key)) || { songs: [], marked: [] };
+      saved.pattern = patternSelect.value;
+      localStorage.setItem(key, JSON.stringify(saved));
+    });
+
     function updateCounter() {
       if (!currentDecadeKey) return;
       const marked = document.querySelectorAll(`.decade[data-key="${currentDecadeKey}"] .selected`).length;
       const total = document.querySelectorAll(`.decade[data-key="${currentDecadeKey}"] .song-item`).length;
       counterDisplay.textContent = `Selected ${marked} of ${total} songs`;
+      patternSelect.value = getPattern(currentDecadeKey);
     }
 
     function showPlayed(item, played) {
@@ -115,28 +136,34 @@
 
       const decadeKey = BATCH_DECADES.find(d => d.name === card.decade).key;
       const { marked = [] } = JSON.parse(localStorage.getItem(`bingoState_${decadeKey}`)) || {};
-      const result = checkCard(card, marked);
+      const result = checkPattern(card, marked, getPattern(decadeKey));
+      const pattern = result.pattern;
 
       let verdict;
-      if (result.fullHouse) verdict = `<p class="verdict win">FULL HOUSE! Every square has been played.</p>`;
-      else if (result.lines.length) verdict = `<p class="verdict win">BINGO! ${result.lines.join(", ")}</p>`;
-      else verdict = `<p class="verdict no">Not yet: the closest line still needs ${result.bestMissing} more song${result.bestMissing === 1 ? "" : "s"}.</p>`;
+      if (result.won.length) {
+        const which = ["line", "two-lines"].includes(pattern.id) ? ` ${result.won.join(", ")}` : "";
+        verdict = `<p class="verdict win">${pattern.shout}${which}</p>`;
+      } else {
+        verdict = `<p class="verdict no">Not yet for ${pattern.name.toLowerCase()}: still needs ${result.missing} more song${result.missing === 1 ? "" : "s"}.</p>`;
+      }
 
-      const cells = result.grid.map(c => c.free
-        ? `<td class="free played">FREE</td>`
-        : `<td class="${c.played ? "played" : ""}">${c.song}</td>`);
+      const winCells = new Set(result.cells);
+      const cells = result.grid.map((c, i) => {
+        const cls = [c.played ? "played" : "", winCells.has(i) ? "win" : ""].join(" ").trim();
+        return c.free ? `<td class="free ${cls}">FREE</td>` : `<td class="${cls}">${c.song}</td>`;
+      });
       const rows = [0, 1, 2, 3, 4].map(r => `<tr>${cells.slice(r * 5, r * 5 + 5).join("")}</tr>`).join("");
 
       out.innerHTML = `
         ${verdict}
-        <p>Card ${card.number} (${card.number <= CARDS_PER_BATCH ? "printed" : "phone"}) · Batch ${seed} · <strong>Game ${card.game}: ${card.decade}</strong> · Checksum ${card.checksum}
+        <p>Card ${card.number} (${card.number <= CARDS_PER_BATCH ? "printed" : "phone"}) · Batch ${seed} · <strong>Game ${card.game}: ${card.decade}</strong>, playing for <strong>${pattern.name}</strong> · Checksum ${card.checksum}
            — ask the player to read out their checksum to confirm it's the same card.</p>
         <p>${marked.length} song${marked.length === 1 ? "" : "s"} played so far in the ${card.decade} game.</p>
         <table class="check-grid">${rows}</table>`;
     });
 
     function resetGame() {
-      if (!confirm("Start over? This clears the running order and every played song in all eight games.")) return;
+      if (!confirm("Start over? This clears the running order and every played song and pattern in all eight games.")) return;
       decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
       location.reload();
     }
@@ -153,7 +180,7 @@
       } else {
         order.push(...shuffle(original.filter(([title]) => !order.includes(title))).map(([title]) => title));
       }
-      const state = { songs: order, marked: (saved && saved.marked) || [] };
+      const state = { songs: order, marked: (saved && saved.marked) || [], pattern: patternById(saved && saved.pattern).id };
       localStorage.setItem(`bingoState_${key}`, JSON.stringify(state));
 
       const section = document.createElement("div");

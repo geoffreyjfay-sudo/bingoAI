@@ -102,6 +102,45 @@ const BINGO_LINES = (() => {
   return lines;
 })();
 
+// What a player needs to win a game. The host picks one per game (livelist.html) and announces it;
+// players pick the same on their phone (index.html). Each pattern is a list of alternative shapes
+// (sets of grid indexes): completing any one shape wins.
+const PATTERNS = (() => {
+  const unionOf = (...lists) => [...new Set(lists.flat())].sort((a, b) => a - b);
+  const pairs = [];
+  BINGO_LINES.forEach((a, i) => BINGO_LINES.slice(i + 1).forEach(b =>
+    pairs.push({ name: `${a.name} + ${b.name}`, cells: unionOf(a.cells, b.cells) })));
+  const diagonals = BINGO_LINES.filter(l => l.name.startsWith("Diagonal")).map(l => l.cells);
+  return [
+    { id: "line", name: "Any line", shout: "BINGO!", shapes: BINGO_LINES },
+    { id: "two-lines", name: "Two lines", shout: "TWO LINES!", shapes: pairs },
+    { id: "corners", name: "Four corners", shout: "FOUR CORNERS!", shapes: [{ name: "Four corners", cells: [0, 4, 20, 24] }] },
+    { id: "x", name: "X (both diagonals)", shout: "X MARKS THE SPOT!", shapes: [{ name: "X", cells: unionOf(...diagonals) }] },
+    { id: "full", name: "Full house", shout: "FULL HOUSE!", shapes: [{ name: "Full house", cells: [...Array(25).keys()] }] }
+  ];
+})();
+const DEFAULT_PATTERN = "line";
+
+function patternById(id) {
+  return PATTERNS.find(p => p.id === id) || PATTERNS.find(p => p.id === DEFAULT_PATTERN);
+}
+
+// Checks a card against a pattern. Returns { pattern, won: completed shape names, cells: grid indexes
+// of the completed shapes (to highlight), missing: songs still needed for the closest shape, grid }.
+function checkPattern(card, playedTitles, patternId) {
+  const pattern = patternById(patternId);
+  const { grid } = checkCard(card, playedTitles);
+  const shapes = pattern.shapes.map(s => ({ name: s.name, cells: s.cells, missing: s.cells.filter(c => !grid[c].played).length }));
+  const won = shapes.filter(s => s.missing === 0);
+  return {
+    pattern,
+    won: won.map(s => s.name),
+    cells: [...new Set(won.flatMap(s => s.cells))],
+    missing: Math.min(...shapes.map(s => s.missing)),
+    grid
+  };
+}
+
 // Checks a card against the songs played so far.
 // Returns { grid: 25 cells { song, played, free }, lines: completed line names, bestMissing, fullHouse }.
 function checkCard(card, playedTitles) {
