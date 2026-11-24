@@ -1,0 +1,132 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #fff;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 1.8em;
+}
+
+.decade-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.decade-buttons button {
+  padding: 10px 15px;
+  font-size: 1em;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background: #f0f0f0;
+  border-radius: 5px;
+}
+
+.decade-buttons button.active {
+  background: #8b0000;
+  color: #fff;
+  font-weight: bold;
+}
+
+h2 {
+  color: #8b0000;
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 5px;
+  text-align: center;
+}
+
+.decade {
+  margin-bottom: 40px;
+  display: none;
+}
+
+.decade.active {
+  display: block;
+}
+
+.song-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.song-item {
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.song-item label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.song-item input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+.selected {
+  background: #ddd;
+  color: #999;
+  pointer-events: none;
+}
+
+.highlighted {
+  background: #ffffcc;
+  border: 2px solid #ff9900;
+}
+
+.disabled-link {
+  pointer-events: none;
+  color: #999;
+  text-decoration: line-through;
+}
+
+a {
+  text-decoration: none;
+  color: #0066cc;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button.action {
+  margin: 10px auto;
+  display: block;
+  padding: 10px 20px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+#counter {
+  text-align: center;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 600px) {
+  .song-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .decade-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .decade-buttons button {
+    width: 80%;
+  }
+}

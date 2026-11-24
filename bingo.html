@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Geoff & David’s Decades Bingo Bash</title>
+  <link rel="stylesheet" href="bingo.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<script src="song_arrays.js"></script>
+<script>
+  const decades = [
+    { name: "1970s", songs: songs70, game: 1, class: "card-70s" },
+    { name: "1980s", songs: songs80, game: 2, class: "card-80s" },
+    { name: "1990s", songs: songs90, game: 3, class: "card-90s" },
+    { name: "2000s", songs: songs00, game: 4, class: "card-00s" }
+  ];
+
+  const checksumMap = {};
+  const checksumList = [];
+  const songUsage = {};
+  const cardDetails = {};
+
+  function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+  }
+
+  function maybeBold(text) {
+    return Math.random() < 0.3 ? `<strong>${text}</strong>` : text;
+  }
+
+  function titleValue(title) {
+    return [...title].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  }
+
+function createCard(songs, cardNumber, decadeName, gameNumber, cssClass) {
+  const cardSongs = shuffle([...songs]).slice(0, 24);
+  let index = 0;
+  let checksum = 0;
+  let position = 1;
+  const grid = [];
+  const usedSongs = [];
+
+const colorPalette = [
+  "#ff1744", // bright red
+  "#00e676", // neon green
+  "#ffea00", // vivid yellow
+  "#2979ff", // strong blue
+  "#ff9100", // bright orange
+  "#d500f9", // electric purple
+  "#00e5ff", // cyan / aqua
+  "#ff4081", // hot pink
+  "#76ff03", // lime green
+  "#ff5252", // bold coral
+  "#00bfa5", // teal
+  "#b388ff"  // vibrant lavender
+];
+const freeColors = [
+  "#ff1744", // vivid red
+  "#d50000", // deep red
+  "#ff6d00", // blazing orange
+  "#ff9100", // bright orange
+  "#ffea00", // neon yellow
+  "#c6ff00", // chartreuse
+  "#76ff03", // lime
+  "#00e676", // neon green
+  "#1de9b6", // aqua green
+  "#00e5ff", // cyan
+  "#2979ff", // bright blue
+  "#304ffe", // intense indigo
+  "#7c4dff", // violet
+  "#d500f9", // electric purple
+  "#ff4081", // hot pink
+  "#f50057", // magenta
+  "#ff80ab", // vibrant pink
+  "#8d6e63", // earthy brown (contrast)
+  "#aeea00", // yellow-green
+  "#00bfa5"  // teal
+];
+const freeColor = freeColors[Math.floor(Math.random() * freeColors.length)];
+const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+
+  for (let row = 0; row < 5; row++) {
+    const rowData = [];
+    for (let col = 0; col < 5; col++) {
+      if (row === 2 && col === 2) {
+ 			 rowData.push(`<td class="free">😎<br><span style="color:${freeColor}; font-weight:bold;">FREE</span></td>`);
+ 			 position++;
+		} else {
+        const song = cardSongs[index++];
+        const value = titleValue(song);
+        checksum += value * position;
+        const isBold = (row + col) % 2 === 0;
+        const formatted = isBold ? `<strong>${song}</strong>` : song;
+        rowData.push(`<td>${formatted}</td>`);
+        position++;
+        songUsage[song] = (songUsage[song] || 0) + 1;
+        usedSongs.push(song);
+      }
+    }
+    grid.push(`<tr>${rowData.join('')}</tr>`);
+  }
+
+  if (!checksumMap[checksum]) checksumMap[checksum] = [];
+  checksumMap[checksum].push(cardNumber);
+  checksumList.push({ card: cardNumber, checksum });
+  cardDetails[cardNumber] = { decade: decadeName, songs: usedSongs };
+
+  return `
+    <div class="card ${cssClass}">
+<div class="game-label">
+  <span style="color: ${randomColor};">GAME #${gameNumber}</span>
+  <span style="color: black;"> ${decadeName}</span>
+</div>
+      <table>${grid.join('')}</table>
+      <div class="checksum">CARD ${cardNumber} Checksum: ${checksum}</div>
+    </div>
+  `;
+}
+
+
+
+  function renderHeader(container) {
+    const header = document.createElement('div');
+    header.className = 'header';
+    const img = new Image();
+    img.src = 'header.jpg';
+    img.onload = () => {
+      img.alt = 'Header Image';
+      header.appendChild(img);
+      container.prepend(header);
+    };
+    img.onerror = () => {
+      const fallback = document.createElement('h1');
+      fallback.textContent = "Rock'n'Roll Bingo";
+      header.appendChild(fallback);
+      container.prepend(header);
+    };
+  }
+
+  function renderPage(cardsHTML) {
+    const page = document.createElement('div');
+    page.className = 'page';
+    renderHeader(page);
+    page.innerHTML += `<div class="grid">${cardsHTML}</div>`;
+    document.body.appendChild(page);
+  }
+
+  let cardCounter = 1;
+  for (let i = 0; i < 50; i++) {
+
+    let cardsHTML = '';
+    for (let d = 0; d < 4; d++) {
+      const { name, songs, game, class: cssClass } = decades[d];
+      cardsHTML += createCard(songs, cardCounter++, name, game, cssClass);
+    }
+    renderPage(cardsHTML);
+  }
+
+  const reportPage = document.createElement('div');
+  reportPage.className = 'page';
+  const report = document.createElement('div');
+  report.className = 'report';
+
+  const timestamp = new Date().toLocaleString();
+  const duplicates = Object.entries(checksumMap).filter(([_, cards]) => cards.length > 1);
+
+  function renderUsageByDecade() {
+    return decades.map(({ name, songs }) => {
+      const usageList = songs
+        .map(song => ({ song, count: songUsage[song] || 0 }))
+        .sort((b, a) => a.count - b.count);
+      return `<h3>${name}</h3><ul>` +
+        usageList.map(({ song, count }) => `<li>${song}: ${count}</li>`).join('') +
+        '</ul>';
+    }).join('');
+  }
+
+  function renderUnusedSongs() {
+    return decades.map(({ name, songs }) => {
+      const unused = songs.filter(song => !songUsage[song]);
+      if (unused.length === 0) return '';
+      return `<h3>${name} — Unused Songs</h3><ul>` +
+        unused.sort().map(song => `<li>${song}</li>`).join('') +
+        '</ul>';
+    }).join('');
+  }
+
+  report.innerHTML = `
+    <h2>Bingo Card Report</h2>
+    <p><strong>Generated:</strong> ${timestamp}</p>
+    <p><strong>Total cards:</strong> ${checksumList.length}</p>
+    <p><strong>Duplicate Checksums:</strong></p>
+    ${duplicates.length === 0 ? '<p>None detected 🎉</p>' :
+      '<ul>' + duplicates.map(([checksum, cards]) => {
+        return `<li>Checksum ${checksum} appears on cards: ${cards.join(', ')}<br>` +
+          cards.map(cardNum => {
+            const detail = cardDetails[cardNum];
+            return `Card #${cardNum} (${detail.decade}): ${detail.songs.join(', ')}`;
+          }).join('<br>') + '</li>';
+      }).join('') + '</ul>'}
+    <p><strong>Song Usage Count by Decade:</strong></p>
+    ${renderUsageByDecade()}
+    <p><strong>Unused Songs by Decade:</strong></p>
+    ${renderUnusedSongs()}
+    <canvas id="checksumChart" width="600" height="300"></canvas>
+  `;
+
+  reportPage.appendChild(report);
+  document.body.appendChild(reportPage);
+
+  window.onload = () => {
+    const ctx = document.getElementById('checksumChart').getContext('2d');
+    const topSongs = Object.entries(songUsage)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: topSongs.map(([song]) => song),
+        datasets: [{
+          label: 'Top Songs in Duplicates',
+          data: topSongs.map(([_, count]) => count),
+          backgroundColor: '#8b0000'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Most Frequently Used Songs'
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Song Title' } },
+          y: { title: { display: true, text: 'Usage Count' }, beginAtZero: true }
+        }
+      }
+    });
+  };
+</script>
+</body>
+</html>

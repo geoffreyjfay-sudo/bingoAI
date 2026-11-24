@@ -1,0 +1,173 @@
+<head>
+  <meta charset="UTF-8">
+  <title>Decades Bingo Song Checklist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styleslist.css">
+</head>
+<body>
+  <h1>Decades Bingo Song Checklist</h1>
+  <div class="decade-buttons" id="decadeSelector"></div>
+  <div id="counter"></div>
+  <button class="action" onclick="nextRandomSong()">Next Random Song</button>
+  <button class="action" onclick="resetGame()">Start Over</button>
+  <div id="checklist"></div>
+
+  <script src="list_links.js"></script>
+  <script>
+    const decades = [
+      { name: "1970s", key: "songs70", original: songs70 },
+      { name: "1980s", key: "songs80", original: songs80 },
+      { name: "1990s", key: "songs90", original: songs90 },
+      { name: "2000s", key: "songs00", original: songs00 }
+    ];
+
+    const checklistContainer = document.getElementById("checklist");
+    const counterDisplay = document.getElementById("counter");
+    const selectorContainer = document.getElementById("decadeSelector");
+    const allSongElements = {};
+    let currentDecadeKey = null;
+
+    function updateStorage(decadeKey, title, isMarked) {
+      const key = `bingoState_${decadeKey}`;
+      const saved = JSON.parse(localStorage.getItem(key)) || { songs: [], marked: [] };
+      if (isMarked) {
+        saved.marked = [...new Set([...(saved.marked || []), title])];
+      } else {
+        saved.marked = (saved.marked || []).filter(t => t !== title);
+      }
+      localStorage.setItem(key, JSON.stringify(saved));
+    }
+
+    function updateCounter() {
+      if (!currentDecadeKey) return;
+      const marked = document.querySelectorAll(`.decade[data-key="${currentDecadeKey}"] .selected`).length;
+      const total = document.querySelectorAll(`.decade[data-key="${currentDecadeKey}"] .song-item`).length;
+      counterDisplay.textContent = `Selected ${marked} of ${total} songs`;
+    }
+
+    function resetGame() {
+      decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
+      location.reload();
+    }
+
+    function renderDecade({ name, key, original }, index) {
+      let state = JSON.parse(localStorage.getItem(`bingoState_${key}`));
+      if (!state || !state.songs.length) {
+        state = {
+          songs: [...original].sort(() => Math.random() - 0.5),
+          marked: []
+        };
+        localStorage.setItem(`bingoState_${key}`, JSON.stringify(state));
+      }
+
+      const section = document.createElement("div");
+      section.className = "decade";
+      section.dataset.key = key;
+
+      const heading = document.createElement("h2");
+      heading.textContent = `${name} – Decades Bingo Song Checklist`;
+      section.appendChild(heading);
+
+      const grid = document.createElement("div");
+      grid.className = "song-grid";
+
+      allSongElements[key] = [];
+
+      state.songs.forEach(([title, link], i) => {
+        const item = document.createElement("div");
+        item.className = "song-item";
+
+        const isMarked = state.marked.includes(title);
+        item.innerHTML = `
+          <label>
+            <input type="checkbox" ${isMarked ? "checked disabled" : ""}>
+            <span>${i + 1}. </span>
+            <a href="${link}" target="_blank">${title}</a>
+          </label>
+        `;
+
+        const checkbox = item.querySelector("input[type='checkbox']");
+        const anchor = item.querySelector("a");
+
+        function markSong() {
+          if (!checkbox.disabled) {
+            checkbox.checked = true;
+            checkbox.disabled = true;
+            item.classList.add("selected");
+            anchor.classList.add("disabled-link");
+            updateStorage(key, title, true);
+            updateCounter();
+          }
+        }
+
+        if (isMarked) {
+          item.classList.add("selected");
+          anchor.classList.add("disabled-link");
+        }
+
+        checkbox.addEventListener("change", markSong);
+        anchor.addEventListener("click", () => {
+          markSong();
+        });
+
+        grid.appendChild(item);
+        allSongElements[key].push(item);
+      });
+
+      section.appendChild(grid);
+      checklistContainer.appendChild(section);
+
+      const button = document.createElement("button");
+      button.textContent = name;
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".decade").forEach(d => d.classList.remove("active"));
+        document.querySelectorAll(".decade-buttons button").forEach(b => b.classList.remove("active"));
+        section.classList.add("active");
+        button.classList.add("active");
+        currentDecadeKey = key;
+        updateCounter();
+      });
+
+      if (index === 0) {
+        section.classList.add("active");
+        button.classList.add("active");
+        currentDecadeKey = key;
+      }
+
+      selectorContainer.appendChild(button);
+    }
+
+    function nextRandomSong() {
+      if (!currentDecadeKey) return;
+      const unselected = allSongElements[currentDecadeKey].filter(el => !el.classList.contains("selected"));
+      allSongElements[currentDecadeKey].forEach(el => el.classList.remove("highlighted"));
+
+      if (unselected.length > 0) {
+        const next = unselected[Math.floor(Math.random() * unselected.length)];
+        next.classList.add("highlighted");
+        next.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+
+    window.onload = () => {
+      const savedAny = decades.some(({ key }) => {
+        const state = JSON.parse(localStorage.getItem(`bingoState_${key}`));
+        return state && state.songs.length;
+      });
+
+
+      if (savedAny) {
+        if (confirm("Continue your previous game?")) {
+          decades.forEach(renderDecade);
+        } else {
+          resetGame();
+        }
+      } else {
+        decades.forEach(renderDecade);
+      }
+
+      updateCounter();
+    };
+  </script>
+</body>
+</html>

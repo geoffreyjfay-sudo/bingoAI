@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decades Bingo Song Checklist</title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #8b0000;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      font-size: 1.4em;
+      text-align: center;
+    }
+
+    .decade {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .song-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px 20px;
+      width: 100%;
+      max-width: 1000px;
+      margin-top: 20px;
+    }
+
+    .song-item {
+      font-size: 1em;
+    }
+
+    .checkbox-square {
+      font-weight: bold;
+      margin-right: 10px;
+      display: inline-block;
+      width: 1em;
+    }
+
+    @media print {
+      h1 {
+        font-size: 1.5em;
+      }
+
+      h2 {
+        font-size: 1.3em;
+      }
+
+      .song-item {
+        font-size: 0.95em;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="checklist"></div>
+
+  <script src="list_links.js"></script>
+  <script>
+    const decades = [
+      { name: "1970s", songs: songs70 },
+      { name: "1980s", songs: songs80 },
+      { name: "1990s", songs: songs90 },
+      { name: "2000s", songs: songs00 }
+    ];
+
+    const checklistContainer = document.getElementById("checklist");
+
+    decades.forEach(({ name, songs }) => {
+      const section = document.createElement("div");
+      section.className = "decade";
+
+      const heading = document.createElement("h2");
+      heading.textContent = `${name} – Decades Bingo Song Checklist`;
+      section.appendChild(heading);
+
+      const grid = document.createElement("div");
+      grid.className = "song-grid";
+
+      songs.sort((a, b) => a.localeCompare(b)).forEach(song => {
+        const item = document.createElement("div");
+        item.className = "song-item";
+        item.innerHTML = `<span class="checkbox-square">☐</span>${song}`;
+        grid.appendChild(item);
+      });
+
+      section.appendChild(grid);
+      checklistContainer.appendChild(section);
+    });
+  </script>
+</body>
+</html>

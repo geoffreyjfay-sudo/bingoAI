@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decades Bingo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="bingoplay.css">
+  <style>
+    /* Modern CSS is included below */
+  </style>
+</head>
+<body class="bg-1970s">
+  <div class="header">
+    <img src="header.jpg" alt="Decades Bingo Header">
+    <h1>Pick Your Game</h1>
+  <div id="controls">
+  <div id="decade-buttons">
+    <button onclick="switchDecade('1970s')">🎵 GAME 1 : <b>1970s</b></button>
+    <button onclick="switchDecade('1980s')">📼 GAME 2 : <b>1980s</b></button>
+    <button onclick="switchDecade('1990s')">💾 GAME 3 : <b>1990s</b></button>
+    <button onclick="switchDecade('2000s')">📱 GAME 4 : <b>2000s</b></button>
+  </div>
+</div>
+  </div>
+
+  <div id="bingo"></div>
+  <div id="checksum"></div>
+
+  <script src="song_arrays.js"></script>
+  <script>
+    const bingoGrid = document.getElementById("bingo");
+    const checksumDisplay = document.getElementById("checksum");
+    const allDecades = ["1970s", "1980s", "1990s", "2000s"];
+    let currentDecade = "1970s";
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function getSongs(decade) {
+      switch (decade) {
+        case "1970s": return songs70;
+        case "1980s": return songs80;
+        case "1990s": return songs90;
+        case "2000s": return songs00;
+        default: return [];
+      }
+    }
+
+    function titleValue(title) {
+      return [...title].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    }
+
+    function calculateChecksum(songs) {
+      let checksum = 0;
+      let position = 1;
+      for (let i = 0; i < 25; i++) {
+        if (i === 12) {
+          position++;
+          continue;
+        }
+        const song = songs[i < 12 ? i : i - 1];
+        checksum += titleValue(song) * position;
+        position++;
+      }
+      return checksum;
+    }
+
+    function renderCard(songs, marked) {
+      bingoGrid.innerHTML = "";
+      let index = 0;
+      const cardSongs = [];
+
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const i = row * 5 + col;
+          const tile = document.createElement("div");
+          tile.className = "tile";
+
+          const isBold = (row + col) % 2 === 0;
+
+          if (i === 12) {
+            tile.innerHTML = "<span class='bold'>😎 FREE</span>";
+            tile.classList.add("marked");
+          } else {
+            const song = songs[index++];
+            cardSongs.push(song);
+            tile.innerHTML = isBold ? `<span class='bold'>${song}</span>` : song;
+            if (marked.includes(song)) tile.classList.add("marked");
+            tile.onclick = () => {
+              tile.classList.toggle("marked");
+              updateStorage(currentDecade, song, tile.classList.contains("marked"));
+            };
+          }
+
+          bingoGrid.appendChild(tile);
+        }
+      }
+
+      const checksum = calculateChecksum(cardSongs);
+      checksumDisplay.textContent = `Checksum: ${checksum}`;
+    }
+
+    function updateStorage(decade, song, isMarked) {
+      const key = `bingoState_${decade}`;
+      const saved = JSON.parse(localStorage.getItem(key)) || { songs: [], marked: [] };
+      if (isMarked) {
+        saved.marked = [...new Set([...(saved.marked || []), song])];
+      } else {
+        saved.marked = (saved.marked || []).filter(s => s !== song);
+      }
+      localStorage.setItem(key, JSON.stringify(saved));
+    }
+
+    function startGame(decade) {
+      const songs = shuffle(getSongs(decade)).slice(0, 24);
+      const state = { songs, marked: [] };
+      localStorage.setItem(`bingoState_${decade}`, JSON.stringify(state));
+      renderCard(state.songs, []);
+    }
+
+    function resumeGame(decade, state) {
+      renderCard(state.songs, state.marked || []);
+    }
+
+    function switchDecade(decade) {
+      currentDecade = decade;
+      document.body.className = `bg-${decade}`;
+      const key = `bingoState_${decade}`;
+      const saved = JSON.parse(localStorage.getItem(key));
+      if (saved && saved.songs) {
+        resumeGame(decade, saved);
+      } else {
+        startGame(decade);
+      }
+    }
+
+    function clearAllGames() {
+      allDecades.forEach(decade => {
+        localStorage.removeItem(`bingoState_${decade}`);
+      });
+    }
+
+    window.onload = () => {
+      document.body.className = "bg-1970s";
+      const savedAny = allDecades.some(decade => {
+        const state = JSON.parse(localStorage.getItem(`bingoState_${decade}`));
+        return state && state.songs;
+      });
+
+      if (savedAny) {
+        if (confirm("Continue your previous game?")) {
+          const saved = JSON.parse(localStorage.getItem(`bingoState_1970s`));
+          if (saved && saved.songs) {
+            resumeGame("1970s", saved);
+          } else {
+            startGame("1970s");
+          }
+        } else {
+          clearAllGames();
+          startGame("1970s");
+        }
+      } else {
+        startGame("1970s");
+      }
+    };
+  </script>
+
+
+</body>
+</html>
+
