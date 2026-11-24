@@ -13,7 +13,7 @@ Plain static HTML/CSS/JS — no build step, no package manager, no tests. Serve 
 |---|---|---|
 | `bingo.html` + `bingo.css` | Host, before the event | Generates 50 printable A4 pages × 4 cards (200 cards), one per decade per page, each with a card number and checksum. Ends with a report page: duplicate checksums, song usage counts, unused songs, Chart.js bar chart. Print to PDF. |
 | `index.html` + `bingoplay.css` | Players, on their phones | Digital card. Pick a decade, get a random 24-song card, tap to mark. State kept in `localStorage` (`bingoState_1970s` etc., plus `bingoLastDecade` so a reload resumes the decade the player was on). |
-| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade with links to Apple Music. Clicking a link/checkbox marks the song played (locked). "Next Random Song" highlights an unplayed track. State in `localStorage` (`bingoState_songs70` etc.). |
+| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade with links to Apple Music. Clicking a link/checkbox marks the song played (locked). "Next Random Song" highlights an unplayed track. State in `localStorage` (`bingoState_songs70` etc.): the running order as titles plus marked titles. Links are looked up from the loaded list at render time, so both live list pages share one game. Older saves holding `[title, link]` pairs are converted on load. |
 | `livelist_spot.html` | Host | Same as `livelist.html` but loads Spotify links (`list_links_spot.js`). |
 | `checklist.html` | Host | Printable A4-landscape tick-list of all songs per decade. |
 
@@ -39,9 +39,5 @@ a copy of the list. Don't use `sort(() => Math.random() - 0.5)`: it's biased.
 
 ## Known quirks
 
-- `livelist.html` and `livelist_spot.html` save the running order *with its links* under the same
-  `localStorage` keys (`bingoState_songs70` etc.). So a saved order keeps whatever links it was
-  created with: open the Apple page, then the Spotify page, and "Continue" shows Apple links (and
-  edits to the link files don't show up until "Start Over").
 - `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
 - Printed card numbers/checksums from `bingo.html` are random per load — reprinting gives different cards.

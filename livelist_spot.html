@@ -61,14 +61,19 @@
     }
 
     function renderDecade({ name, key, original }, index) {
-      let state = JSON.parse(localStorage.getItem(`bingoState_${key}`));
-      if (!state || !state.songs.length) {
-        state = {
-          songs: shuffle(original),
-          marked: []
-        };
-        localStorage.setItem(`bingoState_${key}`, JSON.stringify(state));
+      // Save only the running order (titles) and marks; links always come from the loaded list, so
+      // the Apple Music and Spotify pages can share a game and link edits show up straight away.
+      const linkFor = new Map(original);
+      const saved = JSON.parse(localStorage.getItem(`bingoState_${key}`));
+      // Older saves stored [title, link] pairs: keep just the titles.
+      let order = (saved && saved.songs || []).map(s => Array.isArray(s) ? s[0] : s).filter(t => linkFor.has(t));
+      if (!order.length) {
+        order = shuffle(original).map(([title]) => title);
+      } else {
+        order.push(...shuffle(original.filter(([title]) => !order.includes(title))).map(([title]) => title));
       }
+      const state = { songs: order, marked: (saved && saved.marked) || [] };
+      localStorage.setItem(`bingoState_${key}`, JSON.stringify(state));
 
       const section = document.createElement("div");
       section.className = "decade";
@@ -83,7 +88,8 @@
 
       allSongElements[key] = [];
 
-      state.songs.forEach(([title, link], i) => {
+      state.songs.forEach((title, i) => {
+        const link = linkFor.get(title);
         const item = document.createElement("div");
         item.className = "song-item";
 
