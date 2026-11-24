@@ -26,6 +26,7 @@
 
   <div id="bingo"></div>
   <div id="checksum"></div>
+  <div id="win-banner" role="status" aria-live="polite" hidden></div>
 
   <script src="songs.js"></script>
   <script src="cards.js"></script>
@@ -40,6 +41,9 @@
     let currentDecade = "1970s";
     let phoneCard = null; // { batch, page }
     let cards = null;     // the page's four cards, in decade order
+    let currentCard = null;
+    let tileEls = [];     // the 25 squares on screen, row by row
+    let shownLines = 0;   // completed lines last time we looked, to celebrate only new ones
 
     function randomPage() {
       return FIRST_PHONE_PAGE + Math.floor(Math.random() * (LAST_PHONE_PAGE - FIRST_PHONE_PAGE + 1));
@@ -78,6 +82,8 @@
 
     function renderCard(card, marked) {
       bingoGrid.innerHTML = "";
+      currentCard = card;
+      tileEls = [];
       let index = 0;
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
@@ -96,8 +102,10 @@
             tile.onclick = () => {
               tile.classList.toggle("marked");
               updateStorage(currentDecade, song, tile.classList.contains("marked"));
+              updateWin(true);
             };
           }
+          tileEls.push(tile);
           bingoGrid.appendChild(tile);
         }
       }
@@ -106,12 +114,41 @@
         `<span class="small">Shout BINGO and give the host your card number.</span>`;
     }
 
+    // Highlights any completed line (row, column or diagonal) from the player's own marks and shows a
+    // BINGO banner. The host still checks the card against the songs actually played.
+    function updateWin(celebrate) {
+      const result = checkCard(currentCard, getMarks(currentDecade));
+      const winCells = new Set(BINGO_LINES.filter(l => result.lines.includes(l.name)).flatMap(l => l.cells));
+      tileEls.forEach((tile, i) => tile.classList.toggle("win", winCells.has(i)));
+
+      const banner = document.getElementById("win-banner");
+      if (!result.lines.length) {
+        banner.hidden = true;
+        banner.classList.remove("pop");
+        shownLines = 0;
+        return;
+      }
+      banner.hidden = false;
+      banner.innerHTML = result.fullHouse
+        ? `<strong>FULL HOUSE!</strong><br>Shout it and give the host card <strong>${currentCard.number}</strong>`
+        : `<strong>BINGO!</strong> ${result.lines.join(", ")}<br>Shout it and give the host card <strong>${currentCard.number}</strong>`;
+      banner.classList.remove("pop"); // only animate for a newly completed line
+      if (celebrate && result.lines.length > shownLines) {
+        void banner.offsetWidth; // restart the animation
+        banner.classList.add("pop");
+        if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+      }
+      shownLines = result.lines.length;
+    }
+
     function switchDecade(decade) {
       if (!cards) return;
       currentDecade = decade;
       localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
       renderCard(cards[allDecades.indexOf(decade)], getMarks(decade));
+      shownLines = 0;
+      updateWin(false);
     }
 
     function askForBatch() {

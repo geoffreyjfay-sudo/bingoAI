@@ -262,3 +262,55 @@ body.bg-2000s .marked {
     transform: none;
   }
 }
+
+/* Squares in a completed line */
+.tile.win {
+  outline: 3px solid #ffd600;
+  outline-offset: -3px;
+  box-shadow: 0 0 12px rgba(255, 214, 0, 0.9);
+}
+
+/* BINGO banner: pinned to the bottom of the screen so it's seen while tapping squares */
+#win-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: min(92vw, 520px);
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #ffd600;
+  color: #222;
+  text-align: center;
+  font-size: 1.05em;
+  line-height: 1.35;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+}
+
+#win-banner strong:first-child {
+  font-size: 1.6em;
+  letter-spacing: 0.04em;
+}
+
+#win-banner.pop {
+  animation: win-pop 0.6s ease-out;
+}
+
+@keyframes win-pop {
+  0%   { transform: translateX(-50%) scale(0.6); opacity: 0; }
+  60%  { transform: translateX(-50%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+/* Leave room below the card so the banner doesn't cover the card number */
+body {
+  padding-bottom: 110px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #win-banner.pop {
+    animation: none;
+  }
+}
