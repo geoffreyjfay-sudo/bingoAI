@@ -41,6 +41,23 @@
   const usageKey = (decade, song) => `${decade}|${song}`;
   const cardDetails = {};
 
+  // Words too long for a square get soft hyphens at sensible places, so they break as "Christmas-
+  // time" rather than "Christmastim-e". Only the printed text changes, not the title. Any long word
+  // not listed here is left to the browser's own hyphenation (hyphens: auto in bingo.css).
+  const BREAKS = {
+    Supercalifragilisticexpialidocious: 'Super-cali-fragi-listic-expi-ali-docious',
+    Christmastime: 'Christmas-time', Transmission: 'Trans-mission', Thunderbirds: 'Thunder-birds',
+    Superstition: 'Super-stition', Sledgehammer: 'Sledge-hammer', Satisfaction: 'Satis-faction',
+    Ghostbusters: 'Ghost-busters', Underground: 'Under-ground', Teletubbies: 'Tele-tubbies',
+    SquarePants: 'Square-Pants', Radioactive: 'Radio-active', Necessities: 'Neces-sities',
+    Independent: 'Inde-pendent', Flintstones: 'Flint-stones', Comfortably: 'Comfort-ably',
+    Celebration: 'Cele-bration', Summertime: 'Summer-time', Wonderwall: 'Wonder-wall',
+    Watermelon: 'Water-melon', SpongeBob: 'Sponge-Bob',
+  };
+  function withBreaks(title) {
+    return title.replace(/[A-Za-z]{9,}/g, w => BREAKS[w] ? BREAKS[w].replace(/-/g, '&shy;') : w);
+  }
+
   function createCard(card) {
     const grid = [];
     let index = 0;
@@ -52,9 +69,7 @@
         } else {
           const song = card.songs[index++];
           const isBold = (row + col) % 2 === 0;
-          // Very long words (Supercalifragilisticexpialidocious) get soft hyphens so they can break
-          // without widening their column; only the printed text changes, not the title.
-          const shown = song.replace(/\S{17,}/g, w => w.match(/.{1,12}/g).join('&shy;'));
+          const shown = withBreaks(song);
           rowData.push(`<td>${isBold ? `<strong>${shown}</strong>` : shown}</td>`);
           const key = usageKey(card.decade, song);
           songUsage[key] = (songUsage[key] || 0) + 1;
@@ -97,11 +112,11 @@
     };
   }
 
-  function renderPage(cardsHTML) {
+  function renderPage(cards) {
     const page = document.createElement('div');
     page.className = 'page';
     renderHeader(page);
-    page.innerHTML += `<div class="grid">${cardsHTML}</div>`;
+    page.innerHTML += `<div class="grid${cards.length <= 2 ? ' half' : ''}">${cards.join('')}</div>`;
     document.body.appendChild(page);
   }
 
@@ -111,7 +126,7 @@
   for (let p = 0; p < batch.length; p += GAMES) {
     const player = batch.slice(p, p + GAMES);
     for (let i = 0; i < player.length; i += 4) {
-      renderPage(player.slice(i, i + 4).map(createCard).join(''));
+      renderPage(player.slice(i, i + 4).map(createCard));
     }
   }
 
