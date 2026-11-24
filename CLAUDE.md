@@ -8,6 +8,10 @@ Plain static HTML/CSS/JS — no build step, no package manager, no tests, and no
 is loaded from a CDN (keep it that way; the venue Wi-Fi may be poor). Only the song links go online. Serve the folder (the
 `static` config in `.claude/launch.json` runs `python3 -m http.server 8780`) and open the pages.
 
+Live site: GitHub Pages serves `main` (repo is public for this) at
+https://geoffreyjfay-sudo.github.io/bingoAI/ — every push to `main` redeploys it within a minute or two.
+Players' link: `https://geoffreyjfay-sudo.github.io/bingoAI/?batch=<batch>`.
+
 ## Pages
 
 | File | Who uses it | What it does |
