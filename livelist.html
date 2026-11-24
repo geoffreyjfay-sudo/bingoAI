@@ -20,6 +20,25 @@
   <button class="action" onclick="undoLastPlayed()">Undo Last Played</button>
   <button class="action" onclick="resetGame()">Start Over</button>
 
+  <section id="share">
+    <h2>Players' Cards</h2>
+    <form id="share-form" onsubmit="return false">
+      <label>Batch <input type="number" id="share-batch" min="1" inputmode="numeric"></label>
+      <button type="button" id="share-big">Show full screen</button>
+    </form>
+    <div id="share-qr"></div>
+    <p id="share-url"></p>
+    <p class="hint" id="share-hint"></p>
+  </section>
+
+  <div id="share-overlay" hidden>
+    <div class="share-big-title">Scan for your bingo cards</div>
+    <div id="share-big-qr"></div>
+    <div class="share-big-batch">Batch <strong id="share-big-batch"></strong></div>
+    <div class="share-big-url" id="share-big-url"></div>
+    <div class="share-big-close">Tap anywhere or press Esc to close</div>
+  </div>
+
   <section id="card-check">
     <h2>Check a Card</h2>
     <form id="card-check-form">
@@ -34,6 +53,7 @@
 
   <script src="songs.js"></script>
   <script src="cards.js"></script>
+  <script src="qr.js"></script>
   <script>
     // Which streaming service the song links open: livelist.html (Apple Music) or
     // livelist.html?service=spotify. Both share the same saved game.
@@ -128,6 +148,8 @@
       const seed = Number(checkBatch.value);
       const number = Number(document.getElementById("check-card").value);
       localStorage.setItem("bingoBatch", seed);
+      shareBatch.value = seed;
+      showShare();
       const out = document.getElementById("card-check-result");
       if (number > LAST_PHONE_PAGE * GAMES) { out.textContent = `There is no card ${number}.`; return; }
       const card = cardByNumber(seed, number);
@@ -159,6 +181,60 @@
         <p>${marked.length} song${marked.length === 1 ? "" : "s"} played so far in the ${card.decade} game.</p>
         <table class="check-grid">${rows}</table>`;
     });
+
+    // --- Players' link: a QR code that opens the phone cards for a batch ---
+    // On the live site the link points at the same site; when this page runs on this computer
+    // (localhost), phones can't reach it, so the link points at the live GitHub Pages site instead.
+    const LIVE_SITE = "https://geoffreyjfay-sudo.github.io/bingoAI/";
+    const runningLocally = !/^https?:$/.test(location.protocol) || ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+    const siteBase = runningLocally ? LIVE_SITE : new URL(".", location.href).href;
+    const shareBatch = document.getElementById("share-batch");
+    const shareBig = document.getElementById("share-big");
+    const overlay = document.getElementById("share-overlay");
+    shareBatch.value = checkBatch.value;
+    document.getElementById("share-hint").textContent = runningLocally
+      ? "This page is running on your computer, so the code opens the live site (" + LIVE_SITE + ")."
+      : "Players scan this with their phone camera to get their cards for this batch.";
+
+    function playersLink() {
+      const batch = Number(shareBatch.value);
+      return Number.isInteger(batch) && batch > 0 ? `${siteBase}?batch=${batch}` : null;
+    }
+
+    function showShare() {
+      const link = playersLink();
+      shareBig.disabled = !link;
+      document.getElementById("share-qr").innerHTML = link ? qrSvg(link, { scale: 6 }) : "";
+      document.getElementById("share-url").innerHTML = link
+        ? `<a href="${link}" target="_blank">${link}</a>`
+        : "Enter the batch number to show the players' QR code.";
+    }
+
+    shareBatch.addEventListener("input", () => {
+      checkBatch.value = shareBatch.value;
+      if (playersLink()) localStorage.setItem("bingoBatch", shareBatch.value);
+      showShare();
+    });
+
+    // Full-screen QR to show on a big screen or hold up to the room.
+    shareBig.addEventListener("click", () => {
+      const link = playersLink();
+      if (!link) return;
+      document.getElementById("share-big-qr").innerHTML = qrSvg(link, { scale: 10 });
+      document.getElementById("share-big-batch").textContent = shareBatch.value;
+      document.getElementById("share-big-url").textContent = link;
+      overlay.hidden = false;
+      if (overlay.requestFullscreen) overlay.requestFullscreen().catch(() => {});
+    });
+
+    function closeShare() {
+      overlay.hidden = true;
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+    overlay.addEventListener("click", closeShare);
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !overlay.hidden) closeShare(); });
+    document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) overlay.hidden = true; });
+    showShare();
 
     function resetGame() {
       if (!confirm("Start over? This clears the running order and every played song and pattern in all eight games.")) return;

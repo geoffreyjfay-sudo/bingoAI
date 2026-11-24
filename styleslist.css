@@ -298,3 +298,102 @@ button.action {
   outline: 3px solid #ffd600;
   outline-offset: -3px;
 }
+
+/* Players' Cards: QR code for the phone cards of a batch */
+#share {
+  max-width: 640px;
+  margin: 10px auto 20px;
+  padding: 15px;
+  border: 2px solid #8b0000;
+  border-radius: 8px;
+  background: #fffaf5;
+  text-align: center;
+}
+
+#share h2 {
+  margin-top: 0;
+}
+
+#share form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 15px;
+}
+
+#share input {
+  width: 6em;
+  padding: 5px;
+  font-size: 1em;
+}
+
+#share button {
+  padding: 6px 16px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+#share-qr svg {
+  display: block;
+  margin: 12px auto 4px;
+  width: 220px;
+  height: auto;
+}
+
+#share-url {
+  word-break: break-all;
+  font-size: 0.9em;
+}
+
+#share .hint {
+  font-size: 0.85em;
+  color: #777;
+}
+
+/* Full-screen version */
+#share-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5vh;
+  background: #fff;
+  color: #222;
+  text-align: center;
+  cursor: pointer;
+}
+
+#share-overlay[hidden] {
+  display: none;
+}
+
+#share-big-qr svg {
+  display: block;
+  width: min(68vh, 90vw);
+  height: auto;
+}
+
+.share-big-title {
+  font-size: clamp(1.6em, 5vh, 3.2em);
+  font-weight: bold;
+}
+
+.share-big-batch {
+  font-size: clamp(1.3em, 4vh, 2.4em);
+}
+
+.share-big-url {
+  font-size: clamp(0.9em, 2vh, 1.2em);
+  color: #555;
+  word-break: break-all;
+  padding: 0 10px;
+}
+
+.share-big-close {
+  font-size: 0.9em;
+  color: #999;
+}
