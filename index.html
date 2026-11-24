@@ -6,16 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="bingoplay.css">
 </head>
-<body class="bg-1970s">
+<body class="bg-1950s">
   <div class="header">
     <img src="header.jpg" alt="Decades Bingo Header">
     <h1>Pick Your Game</h1>
   <div id="controls">
   <div id="decade-buttons">
-    <button onclick="switchDecade('1970s')">🎵 GAME 1 : <b>1970s</b></button>
-    <button onclick="switchDecade('1980s')">📼 GAME 2 : <b>1980s</b></button>
-    <button onclick="switchDecade('1990s')">💾 GAME 3 : <b>1990s</b></button>
-    <button onclick="switchDecade('2000s')">📱 GAME 4 : <b>2000s</b></button>
+    <button data-decade="1950s" onclick="switchDecade('1950s')">🎷 GAME 1 : <b>1950s</b></button>
+    <button data-decade="1960s" onclick="switchDecade('1960s')">🌼 GAME 2 : <b>1960s</b></button>
+    <button data-decade="1970s" onclick="switchDecade('1970s')">🎵 GAME 3 : <b>1970s</b></button>
+    <button data-decade="1980s" onclick="switchDecade('1980s')">📼 GAME 4 : <b>1980s</b></button>
+    <button data-decade="1990s" onclick="switchDecade('1990s')">💾 GAME 5 : <b>1990s</b></button>
+    <button data-decade="2000s" onclick="switchDecade('2000s')">📱 GAME 6 : <b>2000s</b></button>
+    <button data-decade="2010s" onclick="switchDecade('2010s')">🎧 GAME 7 : <b>2010s</b></button>
+    <button data-decade="2020s" onclick="switchDecade('2020s')">🔊 GAME 8 : <b>2020s</b></button>
   </div>
 </div>
   </div>
@@ -29,14 +33,14 @@
   <script>
     // Phone cards come from the same numbered batch as the printed ones (see cards.js), so the host
     // can check them with "Check a Card". Players open the link the host shares, e.g.
-    // index.html?batch=54321. The phone picks a random page from 51 up (four cards, one per decade)
+    // index.html?batch=54321. The phone picks a random page from 51 up (eight cards, one per decade)
     // and keeps it; &page= picks a specific one. A new batch means a new card and fresh marks.
     const bingoGrid = document.getElementById("bingo");
     const checksumDisplay = document.getElementById("checksum");
-    const allDecades = ["1970s", "1980s", "1990s", "2000s"];
-    let currentDecade = "1970s";
+    const allDecades = BATCH_DECADES.map(d => d.name);
+    let currentDecade = allDecades[0];
     let phoneCard = null; // { batch, page }
-    let cards = null;     // the page's four cards, in decade order
+    let cards = null;     // the page's eight cards, in decade order
     let currentCard = null;
     let tileEls = [];     // the 25 squares on screen, row by row
     let shownLines = 0;   // completed lines last time we looked, to celebrate only new ones
@@ -142,6 +146,7 @@
       currentDecade = decade;
       localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
+      document.querySelectorAll("#decade-buttons button").forEach(b => b.classList.toggle("active", b.dataset.decade === decade));
       renderCard(cards[allDecades.indexOf(decade)], getMarks(decade));
       shownLines = 0;
       updateWin(false);
@@ -168,7 +173,7 @@
       history.replaceState(null, "", `?batch=${phoneCard.batch}`);
       cards = cardsForPage(phoneCard.batch, phoneCard.page);
       const last = localStorage.getItem("bingoLastDecade");
-      switchDecade(allDecades.includes(last) ? last : "1970s");
+      switchDecade(allDecades.includes(last) ? last : allDecades[0]);
     };
   </script>
 

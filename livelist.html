@@ -22,7 +22,7 @@
       <label>Card # <input type="number" id="check-card" min="1" required></label>
       <button type="submit">Check</button>
     </form>
-    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 200). Songs are checked against what's been played in that card's game.</p>
+    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 400). Songs are checked against what's been played in that card's game.</p>
     <div id="card-check-result"></div>
   </section>
   <div id="checklist"></div>
@@ -39,12 +39,7 @@
       `Links open in <strong>${SERVICES[service]}</strong> · <a href="?service=${other}">switch to ${SERVICES[other]}</a>`;
 
     const withLinks = name => SONGS[name].map(s => [s.title, s[service]]);
-    const decades = [
-      { name: "1970s", key: "songs70", original: withLinks("1970s") },
-      { name: "1980s", key: "songs80", original: withLinks("1980s") },
-      { name: "1990s", key: "songs90", original: withLinks("1990s") },
-      { name: "2000s", key: "songs00", original: withLinks("2000s") }
-    ];
+    const decades = BATCH_DECADES.map(d => ({ name: d.name, key: d.key, original: withLinks(d.name) }));
 
     const checklistContainer = document.getElementById("checklist");
     const counterDisplay = document.getElementById("counter");
@@ -115,7 +110,7 @@
       const number = Number(document.getElementById("check-card").value);
       localStorage.setItem("bingoBatch", seed);
       const out = document.getElementById("card-check-result");
-      if (number > LAST_PHONE_PAGE * 4) { out.textContent = `There is no card ${number}.`; return; }
+      if (number > LAST_PHONE_PAGE * GAMES) { out.textContent = `There is no card ${number}.`; return; }
       const card = cardByNumber(seed, number);
 
       const decadeKey = BATCH_DECADES.find(d => d.name === card.decade).key;
@@ -141,7 +136,7 @@
     });
 
     function resetGame() {
-      if (!confirm("Start over? This clears the running order and every played song in all four games.")) return;
+      if (!confirm("Start over? This clears the running order and every played song in all eight games.")) return;
       decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
       location.reload();
     }

@@ -1,4 +1,4 @@
-/* Printable bingo cards (bingo.html). One A4 page holds four cards, one per decade. */
+/* Printable bingo cards (bingo.html). One A4 page holds four cards; a player's eight (one per decade) take two pages. */
 
 body {
   font-family: Helvetica, Arial, sans-serif;
@@ -46,6 +46,7 @@ body {
 .card-80s { background-color: #ADD8E6; }
 .card-90s { background-color: #98FB98; }
 .card-00s { background-color: #E6E6FA; }
+.card-50s, .card-60s, .card-10s, .card-20s: pick colours here too if turning this on
 */
 
 .game-label {

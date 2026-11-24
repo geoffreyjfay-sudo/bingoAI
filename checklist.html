@@ -79,13 +79,9 @@
   <div id="checklist"></div>
 
   <script src="songs.js"></script>
+  <script src="cards.js"></script>
   <script>
-    const decades = [
-      { name: "1970s", songs: songs70 },
-      { name: "1980s", songs: songs80 },
-      { name: "1990s", songs: songs90 },
-      { name: "2000s", songs: songs00 }
-    ];
+    const decades = BATCH_DECADES.map(d => ({ name: d.name, songs: SONGS[d.name].map(s => s.title) }));
 
     const checklistContainer = document.getElementById("checklist");
 

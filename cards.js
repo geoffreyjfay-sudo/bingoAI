@@ -1,20 +1,26 @@
 // Builds printed bingo batches. Shared by bingo.html (printing) and livelist.html (checking a
 // winner's card), so both always agree on what is on a card. Needs songs.js loaded first.
 //
-// A batch is a numbered run of cards made from a seed: cards 1, 5, 9… are the 1970s game, 2, 6, 10…
-// the 1980s, 3, 7, 11… the 1990s and 4, 8, 12… the 2000s, so each "page" of four holds one card per
-// decade. Pages 1–50 (cards 1–200) are printed by bingo.html; phones (index.html) take a page from 51
-// up, so their cards continue the same batch and can be checked the same way. The same seed and song
+// A batch is a numbered run of cards made from a seed, cycling through the eight games: cards 1, 9,
+// 17… are the 1950s game, 2, 10, 18… the 1960s, and so on to 8, 16, 24… the 2020s, so each "page" of
+// eight is one player's set, one card per decade. Pages 1–50 (cards 1–400) are printed by bingo.html,
+// two A4 sheets per player; phones (index.html) take a page from 51 up, so their cards continue the
+// same batch and can be checked the same way. The same seed and song
 // list always give the same cards, and asking for more cards never changes earlier ones. Changing the
 // order of random() calls below changes every existing batch, so don't.
 
 const BATCH_DECADES = [
-  { name: "1970s", game: 1, class: "card-70s", key: "songs70" },
-  { name: "1980s", game: 2, class: "card-80s", key: "songs80" },
-  { name: "1990s", game: 3, class: "card-90s", key: "songs90" },
-  { name: "2000s", game: 4, class: "card-00s", key: "songs00" }
+  { name: "1950s", game: 1, class: "card-50s", key: "songs50" },
+  { name: "1960s", game: 2, class: "card-60s", key: "songs60" },
+  { name: "1970s", game: 3, class: "card-70s", key: "songs70" },
+  { name: "1980s", game: 4, class: "card-80s", key: "songs80" },
+  { name: "1990s", game: 5, class: "card-90s", key: "songs90" },
+  { name: "2000s", game: 6, class: "card-00s", key: "songs00" },
+  { name: "2010s", game: 7, class: "card-10s", key: "songs10" },
+  { name: "2020s", game: 8, class: "card-20s", key: "songs20" }
 ];
-const CARDS_PER_BATCH = 200;      // printed cards (50 pages)
+const GAMES = BATCH_DECADES.length; // cards per page (one per game)
+const CARDS_PER_BATCH = 50 * GAMES; // printed cards (50 pages, i.e. 50 players)
 const FIRST_PHONE_PAGE = 51;
 const LAST_PHONE_PAGE = 9999;     // phone pages are picked at random from 51–9999
 const FREE_SQUARE = 12; // index of the centre square in a 5×5 grid, read row by row
@@ -48,7 +54,7 @@ function cardChecksum(songs) {
   return songs.reduce((sum, song, i) => sum + titleValue(song) * (i < FREE_SQUARE ? i + 1 : i + 2), 0);
 }
 
-// Returns cards 1..count of a batch (default: the 200 printed cards):
+// Returns cards 1..count of a batch (default: the 400 printed cards):
 // { number, decade, game, class, songs (24 titles, row by row without the centre), checksum, freeColor, labelColor }
 function generateBatch(seed, count = CARDS_PER_BATCH) {
   const random = seededRandom(seed);
@@ -64,7 +70,7 @@ function generateBatch(seed, count = CARDS_PER_BATCH) {
   };
   const cards = [];
   for (let number = 1; number <= count; number++) {
-    const decade = BATCH_DECADES[(number - 1) % 4];
+    const decade = BATCH_DECADES[(number - 1) % GAMES];
     const songs = shuffled(SONGS[decade.name].map(s => s.title)).slice(0, 24);
     const freeColor = FREE_COLORS[Math.floor(random() * FREE_COLORS.length)];
     const labelColor = LABEL_COLORS[Math.floor(random() * LABEL_COLORS.length)];
@@ -74,9 +80,9 @@ function generateBatch(seed, count = CARDS_PER_BATCH) {
   return cards;
 }
 
-// The four cards (1970s, 1980s, 1990s, 2000s) on page `page` of a batch.
+// The eight cards (1950s … 2020s) on page `page` of a batch.
 function cardsForPage(seed, page) {
-  return generateBatch(seed, page * 4).slice(-4);
+  return generateBatch(seed, page * GAMES).slice(-GAMES);
 }
 
 // The single card `number` of a batch.

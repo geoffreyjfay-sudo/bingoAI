@@ -10,7 +10,7 @@
   <span id="batch-info"></span>
   <button type="button" id="new-batch">New batch</button>
   <form id="find-card">
-    <label>Check card # <input type="number" id="find-card-number" min="1" max="200" required></label>
+    <label>Check card # <input type="number" id="find-card-number" min="1" max="400" required></label>
     <button type="submit">Show</button>
   </form>
   <span id="find-card-result"></span>
@@ -19,7 +19,7 @@
 <script src="cards.js"></script>
 <script>
   // Cards are built from a seed so a batch can be reproduced exactly: bingo.html?seed=48213 always
-  // gives the same 200 cards, checksums and report. Without ?seed= a new one is picked and added to
+  // gives the same 400 cards, checksums and report. Without ?seed= a new one is picked and added to
   // the URL. The cards themselves come from generateBatch() in cards.js, which livelist.html also
   // uses to check winners.
   const params = new URLSearchParams(location.search);
@@ -33,7 +33,8 @@
 
   const checksumMap = {};
   const checksumList = [];
-  const songUsage = {};
+  const songUsage = {}; // keyed by decade and title: a title can appear in two decades (e.g. "Stay")
+  const usageKey = (decade, song) => `${decade}|${song}`;
   const cardDetails = {};
 
   function createCard(card) {
@@ -48,7 +49,8 @@
           const song = card.songs[index++];
           const isBold = (row + col) % 2 === 0;
           rowData.push(`<td>${isBold ? `<strong>${song}</strong>` : song}</td>`);
-          songUsage[song] = (songUsage[song] || 0) + 1;
+          const key = usageKey(card.decade, song);
+          songUsage[key] = (songUsage[key] || 0) + 1;
         }
       }
       grid.push(`<tr>${rowData.join('')}</tr>`);
@@ -96,7 +98,7 @@
     document.body.appendChild(page);
   }
 
-  // Four cards (one per decade) to an A4 page.
+  // Four cards to an A4 page: each player's eight cards (one per game) fill two sheets.
   const batch = generateBatch(seed);
   for (let i = 0; i < batch.length; i += 4) {
     renderPage(batch.slice(i, i + 4).map(createCard).join(''));
@@ -113,7 +115,7 @@
   function renderUsageByDecade() {
     return decades.map(({ name, songs }) => {
       const usageList = songs
-        .map(song => ({ song, count: songUsage[song] || 0 }))
+        .map(song => ({ song, count: songUsage[usageKey(name, song)] || 0 }))
         .sort((b, a) => a.count - b.count);
       return `<h3>${name}</h3><ul>` +
         usageList.map(({ song, count }) => `<li>${song}: ${count}</li>`).join('') +
@@ -123,7 +125,7 @@
 
   function renderUnusedSongs() {
     return decades.map(({ name, songs }) => {
-      const unused = songs.filter(song => !songUsage[song]);
+      const unused = songs.filter(song => !songUsage[usageKey(name, song)]);
       if (unused.length === 0) return '';
       return `<h3>${name} — Unused Songs</h3><ul>` +
         unused.sort().map(song => `<li>${song}</li>`).join('') +
@@ -133,13 +135,12 @@
 
   // Ten most-used songs as plain HTML bars (no chart library, so the page works offline).
   function renderTopSongs() {
-    const decadeOf = Object.fromEntries(decades.flatMap(({ name, songs }) => songs.map(s => [s, name])));
     const top = Object.entries(songUsage).sort((a, b) => b[1] - a[1]).slice(0, 10);
     const max = top.length ? top[0][1] : 1;
     return `<h3>Most-Used Songs (cards each appears on)</h3><div class="bars">` +
-      top.map(([song, count]) => `
+      top.map(([key, count]) => [...key.split('|'), count]).map(([decade, song, count]) => `
         <div class="bar-row">
-          <span class="bar-label">${song} <small>${decadeOf[song]}</small></span>
+          <span class="bar-label">${song} <small>${decade}</small></span>
           <span class="bar"><span style="width:${(count / max * 100).toFixed(1)}%"></span></span>
           <span class="bar-value">${count}</span>
         </div>`).join('') + `</div>`;
