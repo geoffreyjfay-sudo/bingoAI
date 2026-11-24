@@ -103,9 +103,39 @@ td {
   color: #333;
 }
 
-canvas {
-  max-width: 100%;
-  margin-top: 20px;
+.bars {
+  margin-top: 8px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 45% 1fr 2.5em;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+}
+
+.bar-label small {
+  color: #888;
+}
+
+.bar {
+  background: #e4e4e4;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: #8b0000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.bar-value {
+  text-align: right;
 }
 
 /* On-screen batch bar (not printed) */

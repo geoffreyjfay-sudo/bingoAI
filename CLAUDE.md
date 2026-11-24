@@ -4,16 +4,17 @@ Music bingo for a live event ("Geoff & David's Decades Bingo Bash"). Four games,
 (1970s, 1980s, 1990s, 2000s), each with a pool of 50 songs. Players mark song titles on a 5×5 card
 (centre square FREE) as the host plays tracks.
 
-Plain static HTML/CSS/JS — no build step, no package manager, no tests. Serve the folder (the
+Plain static HTML/CSS/JS — no build step, no package manager, no tests, and no internet needed: nothing
+is loaded from a CDN (keep it that way; the venue Wi-Fi may be poor). Only the song links go online. Serve the folder (the
 `static` config in `.claude/launch.json` runs `python3 -m http.server 8780`) and open the pages.
 
 ## Pages
 
 | File | Who uses it | What it does |
 |---|---|---|
-| `bingo.html` + `bingo.css` | Host, before the event | Generates 50 printable A4 pages × 4 cards (200 cards), one per decade per page, each with a card number and checksum. Ends with a report page: duplicate checksums, song usage counts, unused songs, Chart.js bar chart. Print to PDF. |
+| `bingo.html` + `bingo.css` | Host, before the event | Generates 50 printable A4 pages × 4 cards (200 cards), one per decade per page, each with a card number and checksum. Ends with a report page: duplicate checksums, song usage counts, unused songs, and an HTML bar chart of the most-used songs. Print to PDF. |
 | `index.html` + `bingoplay.css` | Players, on their phones | Digital card from the same batch as the printed ones, opened as `index.html?batch=54321` (without `?batch=` it asks for the number). The phone picks a random page 51–9999, i.e. four cards numbered above 200 (`&page=` forces one), and shows the card number, batch and checksum so the host can check it. Tap to mark; a completed line or full house (from the player's own marks, via `checkCard`) outlines the line in gold and pins a BINGO banner with the card number to the bottom of the screen. `localStorage`: `bingoPhoneCard` `{batch, page}`, `bingoState_1970s` etc. `{marked}`, `bingoLastDecade`. A different batch or page in the link gives a new card and clears marks. Two phones can draw the same page (identical cards). |
-| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade. Links open Apple Music by default, or Spotify with `livelist.html?service=spotify` (switch link at the top). Clicking a link/checkbox marks the song played; unticking (after a confirm) or "Undo Last Played" un-marks it. "Next Random Song" highlights an unplayed track. "Check a Card" takes a batch and card number, rebuilds that printed card with `cards.js` and shows whether it has a line (rows, columns, diagonals) or full house against the songs played in its decade; the last batch entered is remembered as `bingoBatch`. State in `localStorage` (`bingoState_songs70` etc.): the running order as titles plus marked titles, shared by both services. Links are looked up at render time. Older saves holding `[title, link]` pairs are converted on load. |
+| `livelist.html` + `styleslist.css` | Host, during the event | Shuffled running order per decade. Links open Apple Music by default, or Spotify with `livelist.html?service=spotify` (switch link at the top). Clicking a link/checkbox marks the song played; unticking (after a confirm) or "Undo Last Played" un-marks it. "Next Random Song" highlights an unplayed track. "Check a Card" takes a batch and card number, rebuilds that printed card with `cards.js` and shows whether it has a line (rows, columns, diagonals) or full house against the songs played in its decade; the last batch entered is remembered as `bingoBatch`. A saved game carries on automatically on load; "Start Over" asks before clearing it. State in `localStorage` (`bingoState_songs70` etc.): the running order as titles plus marked titles, shared by both services. Links are looked up at render time. Older saves holding `[title, link]` pairs are converted on load. |
 | `livelist_spot.html` | — | Redirect to `livelist.html?service=spotify`, kept so old bookmarks work. |
 | `checklist.html` | Host | Printable A4-landscape tick-list of all songs per decade. |
 

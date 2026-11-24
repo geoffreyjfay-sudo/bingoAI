@@ -1,5 +1,6 @@
 body {
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  /* The phone's own font (San Francisco on iPhone, Roboto on Android): nothing to download */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: #f4f6f8;
   color: #2c3e50;
   margin: 0;
@@ -112,13 +113,6 @@ body.bg-1990s {
 
 body.bg-2000s {
   background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
-}
-
-/* Default fallback */
-.marked {
-  background-color: #e74c3c;
-  color: white;
-  text-decoration: line-through;
 }
 
 /* 1970s: Deep Teal */

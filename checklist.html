@@ -100,7 +100,7 @@
       const grid = document.createElement("div");
       grid.className = "song-grid";
 
-      songs.sort((a, b) => a.localeCompare(b)).forEach(song => {
+      [...songs].sort((a, b) => a.localeCompare(b)).forEach(song => {
         const item = document.createElement("div");
         item.className = "song-item";
         item.innerHTML = `<span class="checkbox-square">☐</span>${song}`;

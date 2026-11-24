@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Geoff & David’s Decades Bingo Bash</title>
   <link rel="stylesheet" href="bingo.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="batch-bar no-print">
@@ -132,6 +131,20 @@
     }).join('');
   }
 
+  // Ten most-used songs as plain HTML bars (no chart library, so the page works offline).
+  function renderTopSongs() {
+    const decadeOf = Object.fromEntries(decades.flatMap(({ name, songs }) => songs.map(s => [s, name])));
+    const top = Object.entries(songUsage).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const max = top.length ? top[0][1] : 1;
+    return `<h3>Most-Used Songs (cards each appears on)</h3><div class="bars">` +
+      top.map(([song, count]) => `
+        <div class="bar-row">
+          <span class="bar-label">${song} <small>${decadeOf[song]}</small></span>
+          <span class="bar"><span style="width:${(count / max * 100).toFixed(1)}%"></span></span>
+          <span class="bar-value">${count}</span>
+        </div>`).join('') + `</div>`;
+  }
+
   report.innerHTML = `
     <h2>Bingo Card Report</h2>
     <p><strong>Batch:</strong> ${seed} (reprint with bingo.html?seed=${seed}; phone players use index.html?batch=${seed})</p>
@@ -150,7 +163,7 @@
     ${renderUsageByDecade()}
     <p><strong>Unused Songs by Decade:</strong></p>
     ${renderUnusedSongs()}
-    <canvas id="checksumChart" width="600" height="300"></canvas>
+    ${renderTopSongs()}
   `;
 
   reportPage.appendChild(report);
@@ -180,38 +193,6 @@
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
-  window.onload = () => {
-    const ctx = document.getElementById('checksumChart').getContext('2d');
-    const topSongs = Object.entries(songUsage)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: topSongs.map(([song]) => song),
-        datasets: [{
-          label: 'Top Songs in Duplicates',
-          data: topSongs.map(([_, count]) => count),
-          backgroundColor: '#8b0000'
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          title: {
-            display: true,
-            text: 'Most Frequently Used Songs'
-          }
-        },
-        scales: {
-          x: { title: { display: true, text: 'Song Title' } },
-          y: { title: { display: true, text: 'Usage Count' }, beginAtZero: true }
-        }
-      }
-    });
-  };
 </script>
 </body>
 </html>

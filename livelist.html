@@ -141,6 +141,7 @@
     });
 
     function resetGame() {
+      if (!confirm("Start over? This clears the running order and every played song in all four games.")) return;
       decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
       location.reload();
     }
@@ -242,23 +243,9 @@
       }
     }
 
+    // A saved game carries on automatically; "Start Over" begins a new one.
     window.onload = () => {
-      const savedAny = decades.some(({ key }) => {
-        const state = JSON.parse(localStorage.getItem(`bingoState_${key}`));
-        return state && state.songs.length;
-      });
-
-
-      if (savedAny) {
-        if (confirm("Continue your previous game?")) {
-          decades.forEach(renderDecade);
-        } else {
-          resetGame();
-        }
-      } else {
-        decades.forEach(renderDecade);
-      }
-
+      decades.forEach(renderDecade);
       updateCounter();
     };
   </script>
