@@ -34,7 +34,8 @@ positions 1–25 across the grid and position 13 (FREE) skipped. Used to verify 
 
 ## Known quirks
 
-- `index.html` shuffles with `sort(() => Math.random() - 0.5)` (biased) and mutates the shared song
-  array; `bingo.html` uses a proper Fisher–Yates copy.
+- `livelist.html` / `livelist_spot.html` still shuffle the running order with
+  `sort(() => Math.random() - 0.5)`, which is biased (songs near the top of the list tend to stay
+  near the top). `bingo.html` and `index.html` use Fisher–Yates on a copy.
 - `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
 - Printed card numbers/checksums from `bingo.html` are random per load — reprinting gives different cards.
