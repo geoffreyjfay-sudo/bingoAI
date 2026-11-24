@@ -20,8 +20,8 @@
   <button class="action" onclick="undoLastPlayed()">Undo Last Played</button>
   <button class="action" onclick="resetGame()">Start Over</button>
 
-  <section id="share">
-    <h2>Players' Cards</h2>
+  <details id="share" class="panel" open>
+    <summary><h2>Players' Cards</h2></summary>
     <form id="share-form" onsubmit="return false">
       <label>Batch <input type="number" id="share-batch" min="1" inputmode="numeric"></label>
       <button type="button" id="share-big">Show full screen</button>
@@ -29,7 +29,7 @@
     <div id="share-qr"></div>
     <p id="share-url"></p>
     <p class="hint" id="share-hint"></p>
-  </section>
+  </details>
 
   <div id="share-overlay" hidden>
     <div class="share-big-title">Scan for your bingo cards</div>
@@ -39,8 +39,8 @@
     <div class="share-big-close">Tap anywhere or press Esc to close</div>
   </div>
 
-  <section id="card-check">
-    <h2>Check a Card</h2>
+  <details id="card-check" class="panel" open>
+    <summary><h2>Check a Card</h2></summary>
     <form id="card-check-form">
       <label>Batch <input type="number" id="check-batch" min="1" required></label>
       <label>Card # <input type="number" id="check-card" min="1" required></label>
@@ -48,7 +48,7 @@
     </form>
     <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 400). Songs are checked against what's been played in that card's game, for the pattern chosen for that game.</p>
     <div id="card-check-result"></div>
-  </section>
+  </details>
   <div id="checklist"></div>
 
   <script src="songs.js"></script>
@@ -188,6 +188,14 @@
     const LIVE_SITE = "https://geoffreyjfay-sudo.github.io/bingoAI/";
     const runningLocally = !/^https?:$/.test(location.protocol) || ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
     const siteBase = runningLocally ? LIVE_SITE : new URL(".", location.href).href;
+    // Collapsible panels: remember open/closed per panel (bingoPanel_share, bingoPanel_card-check)
+    document.querySelectorAll("details.panel").forEach(panel => {
+      const key = `bingoPanel_${panel.id}`;
+      const saved = localStorage.getItem(key);
+      if (saved !== null) panel.open = saved === "open";
+      panel.addEventListener("toggle", () => localStorage.setItem(key, panel.open ? "open" : "closed"));
+    });
+
     const shareBatch = document.getElementById("share-batch");
     const shareBig = document.getElementById("share-big");
     const overlay = document.getElementById("share-overlay");
