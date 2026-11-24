@@ -12,10 +12,23 @@
   <div class="decade-buttons" id="decadeSelector"></div>
   <div id="counter"></div>
   <button class="action" onclick="nextRandomSong()">Next Random Song</button>
+  <button class="action" onclick="undoLastPlayed()">Undo Last Played</button>
   <button class="action" onclick="resetGame()">Start Over</button>
+
+  <section id="card-check">
+    <h2>Check a Card</h2>
+    <form id="card-check-form">
+      <label>Batch <input type="number" id="check-batch" min="1" required></label>
+      <label>Card # <input type="number" id="check-card" min="1" max="200" required></label>
+      <button type="submit">Check</button>
+    </form>
+    <p class="hint">Batch and card number are printed under each card. Songs are checked against what's been played in that card's game.</p>
+    <div id="card-check-result"></div>
+  </section>
   <div id="checklist"></div>
 
   <script src="songs.js"></script>
+  <script src="cards.js"></script>
   <script>
     // Which streaming service the song links open: livelist.html (Apple Music) or
     // livelist.html?service=spotify. Both share the same saved game.
@@ -67,6 +80,68 @@
       counterDisplay.textContent = `Selected ${marked} of ${total} songs`;
     }
 
+    function showPlayed(item, played) {
+      item.classList.toggle("selected", played);
+      item.querySelector("input").checked = played;
+      item.querySelector("a").classList.toggle("disabled-link", played);
+    }
+
+    function setPlayed(key, item, played) {
+      showPlayed(item, played);
+      if (played) item.classList.remove("highlighted");
+      updateStorage(key, item.dataset.title, played);
+      updateCounter();
+    }
+
+    // Un-marks the most recently played song in the decade on screen.
+    function undoLastPlayed() {
+      if (!currentDecadeKey) return;
+      const { marked = [] } = JSON.parse(localStorage.getItem(`bingoState_${currentDecadeKey}`)) || {};
+      const last = marked[marked.length - 1];
+      if (!last) { alert("Nothing has been played in this game yet."); return; }
+      if (!confirm(`Undo "${last}"? It will go back to not played.`)) return;
+      const item = allSongElements[currentDecadeKey].find(el => el.dataset.title === last);
+      if (item) setPlayed(currentDecadeKey, item, false);
+      else updateStorage(currentDecadeKey, last, false);
+    }
+
+    // --- Checking a printed card (batch + card number) against the songs played so far ---
+    const batchCache = {};
+    const checkBatch = document.getElementById("check-batch");
+    checkBatch.value = localStorage.getItem("bingoBatch") || "";
+
+    document.getElementById("card-check-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const seed = Number(checkBatch.value);
+      const number = Number(document.getElementById("check-card").value);
+      localStorage.setItem("bingoBatch", seed);
+      const cards = batchCache[seed] = batchCache[seed] || generateBatch(seed);
+      const card = cards[number - 1];
+      const out = document.getElementById("card-check-result");
+      if (!card) { out.textContent = `There is no card ${number}.`; return; }
+
+      const decadeKey = BATCH_DECADES.find(d => d.name === card.decade).key;
+      const { marked = [] } = JSON.parse(localStorage.getItem(`bingoState_${decadeKey}`)) || {};
+      const result = checkCard(card, marked);
+
+      let verdict;
+      if (result.fullHouse) verdict = `<p class="verdict win">FULL HOUSE! Every square has been played.</p>`;
+      else if (result.lines.length) verdict = `<p class="verdict win">BINGO! ${result.lines.join(", ")}</p>`;
+      else verdict = `<p class="verdict no">Not yet: the closest line still needs ${result.bestMissing} more song${result.bestMissing === 1 ? "" : "s"}.</p>`;
+
+      const cells = result.grid.map(c => c.free
+        ? `<td class="free played">FREE</td>`
+        : `<td class="${c.played ? "played" : ""}">${c.song}</td>`);
+      const rows = [0, 1, 2, 3, 4].map(r => `<tr>${cells.slice(r * 5, r * 5 + 5).join("")}</tr>`).join("");
+
+      out.innerHTML = `
+        ${verdict}
+        <p>Card ${card.number} · Batch ${seed} · <strong>Game ${card.game}: ${card.decade}</strong> · Checksum ${card.checksum}
+           — ask the player to read out their checksum to confirm it's the same card.</p>
+        <p>${marked.length} song${marked.length === 1 ? "" : "s"} played so far in the ${card.decade} game.</p>
+        <table class="check-grid">${rows}</table>`;
+    });
+
     function resetGame() {
       decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
       location.reload();
@@ -105,10 +180,10 @@
         const item = document.createElement("div");
         item.className = "song-item";
 
-        const isMarked = state.marked.includes(title);
+        item.dataset.title = title;
         item.innerHTML = `
           <label>
-            <input type="checkbox" ${isMarked ? "checked disabled" : ""}>
+            <input type="checkbox">
             <span>${i + 1}. </span>
             <a href="${link}" target="_blank">${title}</a>
           </label>
@@ -116,27 +191,19 @@
 
         const checkbox = item.querySelector("input[type='checkbox']");
         const anchor = item.querySelector("a");
+        showPlayed(item, state.marked.includes(title));
 
-        function markSong() {
-          if (!checkbox.disabled) {
+        // Ticking (or opening the link) marks the song played; unticking asks first, then un-marks it.
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) {
+            setPlayed(key, item, true);
+          } else if (confirm(`Mark "${title}" as not played?`)) {
+            setPlayed(key, item, false);
+          } else {
             checkbox.checked = true;
-            checkbox.disabled = true;
-            item.classList.add("selected");
-            anchor.classList.add("disabled-link");
-            updateStorage(key, title, true);
-            updateCounter();
           }
-        }
-
-        if (isMarked) {
-          item.classList.add("selected");
-          anchor.classList.add("disabled-link");
-        }
-
-        checkbox.addEventListener("change", markSong);
-        anchor.addEventListener("click", () => {
-          markSong();
         });
+        anchor.addEventListener("click", () => setPlayed(key, item, true));
 
         grid.appendChild(item);
         allSongElements[key].push(item);

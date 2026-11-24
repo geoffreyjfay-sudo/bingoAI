@@ -76,10 +76,10 @@ h2 {
   cursor: pointer;
 }
 
+/* Played songs stay clickable so the checkbox can be unticked; only the link is locked (.disabled-link). */
 .selected {
   background: #ddd;
   color: #999;
-  pointer-events: none;
 }
 
 .highlighted {
@@ -135,4 +135,89 @@ button.action {
   text-align: center;
   margin: 0 0 15px;
   color: #555;
+}
+
+/* Check a Card */
+#card-check {
+  max-width: 640px;
+  margin: 10px auto 30px;
+  padding: 15px;
+  border: 2px solid #8b0000;
+  border-radius: 8px;
+  background: #fffaf5;
+}
+
+#card-check h2 {
+  margin-top: 0;
+}
+
+#card-check form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 15px;
+}
+
+#card-check input {
+  width: 6em;
+  padding: 5px;
+  font-size: 1em;
+}
+
+#card-check button {
+  padding: 6px 16px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+#card-check .hint {
+  text-align: center;
+  font-size: 0.85em;
+  color: #777;
+}
+
+.verdict {
+  text-align: center;
+  font-size: 1.4em;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.verdict.win {
+  color: #1b7f2a;
+}
+
+.verdict.no {
+  color: #8b0000;
+}
+
+.check-grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.check-grid td {
+  border: 1px solid #999;
+  padding: 6px 4px;
+  height: 50px;
+  text-align: center;
+  font-size: 0.85em;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 600px) {
+  .check-grid td {
+    font-size: 0.7em;
+    padding: 4px 2px;
+    height: 44px;
+  }
+}
+
+.check-grid td.played {
+  background: #2e7d32;
+  color: #fff;
+  font-weight: bold;
 }
