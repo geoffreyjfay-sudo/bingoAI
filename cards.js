@@ -1,7 +1,8 @@
 // Builds printed bingo batches. Shared by bingo.html (printing) and livelist.html (checking a
 // winner's card), so both always agree on what is on a card. Needs songs.js loaded first.
 //
-// A batch is a numbered run of cards made from a seed, cycling through the eight games: cards 1, 9,
+// A batch is a numbered run of cards made from a seed, cycling through the edition's games (Decades
+// edition below; the Christmas edition works the same with six): cards 1, 9,
 // 17… are the 1950s game, 2, 10, 18… the 1960s, and so on to 8, 16, 24… the 2020s, so each "page" of
 // eight is one player's set, one card per decade. Pages 1–50 (cards 1–400) are printed by bingo.html,
 // two A4 sheets per player; phones (index.html) take a page from 51 up, so their cards continue the
@@ -9,18 +10,69 @@
 // list always give the same cards, and asking for more cards never changes earlier ones. Changing the
 // order of random() calls below changes every existing batch, so don't.
 
-const BATCH_DECADES = [
-  { name: "1950s", game: 1, class: "card-50s", key: "songs50" },
-  { name: "1960s", game: 2, class: "card-60s", key: "songs60" },
-  { name: "1970s", game: 3, class: "card-70s", key: "songs70" },
-  { name: "1980s", game: 4, class: "card-80s", key: "songs80" },
-  { name: "1990s", game: 5, class: "card-90s", key: "songs90" },
-  { name: "2000s", game: 6, class: "card-00s", key: "songs00" },
-  { name: "2010s", game: 7, class: "card-10s", key: "songs10" },
-  { name: "2020s", game: 8, class: "card-20s", key: "songs20" }
-];
+// Editions: the same game with a different set of games and songs. The Decades edition is the
+// default; others open with ?edition=<id> on any page (e.g. index.html?edition=christmas&batch=54321).
+// Each edition's batches are separate: the same batch number gives different cards in each edition.
+// Game ids name the saved state (bingoState_<id> on phones) and the colours in bingoplay.css.
+const EDITIONS = {
+  decades: {
+    id: "decades", title: "Geoff & David's Decades Bingo Bash", short: "Decades Bingo",
+    header: "header.jpg", free: "😎",
+    games: [
+      { id: "1950s", name: "1950s", class: "card-50s", key: "songs50", emoji: "🎷" },
+      { id: "1960s", name: "1960s", class: "card-60s", key: "songs60", emoji: "🌼" },
+      { id: "1970s", name: "1970s", class: "card-70s", key: "songs70", emoji: "🎵" },
+      { id: "1980s", name: "1980s", class: "card-80s", key: "songs80", emoji: "📼" },
+      { id: "1990s", name: "1990s", class: "card-90s", key: "songs90", emoji: "💾" },
+      { id: "2000s", name: "2000s", class: "card-00s", key: "songs00", emoji: "📱" },
+      { id: "2010s", name: "2010s", class: "card-10s", key: "songs10", emoji: "🎧" },
+      { id: "2020s", name: "2020s", class: "card-20s", key: "songs20", emoji: "🔊" }
+    ]
+  },
+  christmas: {
+    id: "christmas", title: "Family Christmas Bingo", short: "Christmas Bingo",
+    header: "header_christmas.svg", free: "🎅",
+    games: [
+      { id: "xmas-hits", name: "Christmas Hits", class: "card-xmas", key: "xmasHits", emoji: "🎄" },
+      { id: "disney", name: "Disney & Pixar", class: "card-disney", key: "xmasDisney", emoji: "🏰" },
+      { id: "tv", name: "TV Themes", class: "card-tv", key: "xmasTV", emoji: "📺" },
+      { id: "movies", name: "Movie Themes", class: "card-movies", key: "xmasMovies", emoji: "🎬" },
+      { id: "musicals", name: "Musicals", class: "card-musicals", key: "xmasMusicals", emoji: "🎭" },
+      { id: "party", name: "Party Dances", class: "card-party", key: "xmasParty", emoji: "🕺" }
+    ]
+  }
+};
+const EDITION = (() => {
+  const id = typeof location === "undefined" ? null : new URLSearchParams(location.search).get("edition");
+  return Object.prototype.hasOwnProperty.call(EDITIONS, id) ? EDITIONS[id] : EDITIONS.decades;
+})();
+document.documentElement.classList.add(`edition-${EDITION.id}`);
+
+// Links to `page` in each edition, the current one in bold (for the host pages).
+function editionSwitcher(page) {
+  return "Edition: " + Object.values(EDITIONS).map(e => e === EDITION ? `<strong>${e.short}</strong>`
+    : `<a href="${e.id === "decades" ? page : `${page}?edition=${e.id}`}">${e.short}</a>`).join(" · ");
+}
+
+// The games of this edition, in order: game 1, 2, ... (cards cycle through them).
+const BATCH_DECADES = EDITION.games.map((g, i) => ({ ...g, game: i + 1 }));
+
+// A localStorage key for this edition: Decades keeps the plain names, others get a suffix.
+function editionKey(name) {
+  return EDITION.id === "decades" ? name : `${name}_${EDITION.id}`;
+}
+
+// A link to `page` in this edition: editionLink("index.html", { batch: 5 }) gives
+// "index.html?edition=christmas&batch=5" (or "index.html?batch=5" for Decades).
+function editionLink(page, params = {}) {
+  const query = new URLSearchParams(EDITION.id === "decades" ? {} : { edition: EDITION.id });
+  Object.entries(params).forEach(([k, v]) => query.set(k, v));
+  const q = query.toString();
+  return q ? `${page}?${q}` : page;
+}
+
 const GAMES = BATCH_DECADES.length; // cards per page (one per game)
-const CARDS_PER_BATCH = 50 * GAMES; // printed cards (50 pages, i.e. 50 players)
+const CARDS_PER_BATCH = 50 * GAMES; // printed cards (50 pages, i.e. 50 players): 400 for Decades
 const FIRST_PHONE_PAGE = 51;
 const LAST_PHONE_PAGE = 9999;     // phone pages are picked at random from 51–9999
 const FREE_SQUARE = 12; // index of the centre square in a 5×5 grid, read row by row
@@ -80,7 +132,7 @@ function generateBatch(seed, count = CARDS_PER_BATCH) {
   return cards;
 }
 
-// The eight cards (1950s … 2020s) on page `page` of a batch.
+// The cards on page `page` of a batch: one per game (eight for Decades, 1950s … 2020s).
 function cardsForPage(seed, page) {
   return generateBatch(seed, page * GAMES).slice(-GAMES);
 }

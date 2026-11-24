@@ -9,21 +9,12 @@
        Loads async; if it can't load, the card works as normal. It skips localhost by itself. -->
   <script data-goatcounter="https://geofffay.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
-<body class="bg-1950s">
+<body>
   <div class="header">
-    <img src="header.jpg" alt="Decades Bingo Header">
+    <img id="header-img" alt="">
     <h1>Pick Your Game</h1>
   <div id="controls">
-  <div id="decade-buttons">
-    <button data-decade="1950s" onclick="switchDecade('1950s')">🎷 GAME 1 : <b>1950s</b></button>
-    <button data-decade="1960s" onclick="switchDecade('1960s')">🌼 GAME 2 : <b>1960s</b></button>
-    <button data-decade="1970s" onclick="switchDecade('1970s')">🎵 GAME 3 : <b>1970s</b></button>
-    <button data-decade="1980s" onclick="switchDecade('1980s')">📼 GAME 4 : <b>1980s</b></button>
-    <button data-decade="1990s" onclick="switchDecade('1990s')">💾 GAME 5 : <b>1990s</b></button>
-    <button data-decade="2000s" onclick="switchDecade('2000s')">📱 GAME 6 : <b>2000s</b></button>
-    <button data-decade="2010s" onclick="switchDecade('2010s')">🎧 GAME 7 : <b>2010s</b></button>
-    <button data-decade="2020s" onclick="switchDecade('2020s')">🔊 GAME 8 : <b>2020s</b></button>
-  </div>
+  <div id="decade-buttons"></div>
   <div id="pattern-bar">
     <div class="pattern-title">Playing for</div>
     <div id="pattern-buttons" role="radiogroup" aria-label="Playing for"></div>
@@ -41,14 +32,21 @@
   <script>
     // Phone cards come from the same numbered batch as the printed ones (see cards.js), so the host
     // can check them with "Check a Card". Players open the link the host shares, e.g.
-    // index.html?batch=54321. The phone picks a random page from 51 up (eight cards, one per decade)
-    // and keeps it; &page= picks a specific one. A new batch means a new card and fresh marks.
+    // index.html?batch=54321 (or index.html?edition=christmas&batch=54321). The phone picks a random
+    // page from 51 up (one card per game) and keeps it; &page= picks a specific one. A new batch
+    // means a new card and fresh marks. Games are named by id (bingoState_1950s, bingoState_disney...).
     const bingoGrid = document.getElementById("bingo");
     const checksumDisplay = document.getElementById("checksum");
-    const allDecades = BATCH_DECADES.map(d => d.name);
+    const allDecades = BATCH_DECADES.map(d => d.id);
+    document.title = EDITION.short;
+    const headerImg = document.getElementById("header-img");
+    headerImg.src = EDITION.header;
+    headerImg.alt = EDITION.title;
+    document.getElementById("decade-buttons").innerHTML = BATCH_DECADES.map(d =>
+      `<button data-decade="${d.id}" onclick="switchDecade('${d.id}')">${d.emoji} GAME ${d.game} : <b>${d.name}</b></button>`).join("");
     let currentDecade = allDecades[0];
     let phoneCard = null; // { batch, page }
-    let cards = null;     // the page's eight cards, in decade order
+    let cards = null;     // the page's cards, one per game in order
     let currentCard = null;
     let tileEls = [];     // the 25 squares on screen, row by row
     let shownWins = 0;    // completed shapes last time we looked, to celebrate only new ones
@@ -71,7 +69,7 @@
       const params = new URLSearchParams(location.search);
       const urlBatch = Number(params.get("batch"));
       const urlPage = Number(params.get("page"));
-      const saved = JSON.parse(localStorage.getItem("bingoPhoneCard"));
+      const saved = JSON.parse(localStorage.getItem(editionKey("bingoPhoneCard")));
       const validBatch = Number.isInteger(urlBatch) && urlBatch > 0;
       const validPage = Number.isInteger(urlPage) && urlPage > 0;
 
@@ -80,7 +78,7 @@
       if (saved && saved.batch === urlBatch && (!validPage || saved.page === urlPage)) return saved;
       const card = { batch: urlBatch, page: validPage ? urlPage : randomPage() };
       clearMarks();
-      localStorage.setItem("bingoPhoneCard", JSON.stringify(card));
+      localStorage.setItem(editionKey("bingoPhoneCard"), JSON.stringify(card));
       return card;
     }
 
@@ -114,7 +112,7 @@
           const isBold = (row + col) % 2 === 0;
 
           if (i === FREE_SQUARE) {
-            tile.innerHTML = "<span class='bold'>😎 FREE</span>";
+            tile.innerHTML = `<span class='bold'>${EDITION.free} FREE</span>`;
             tile.classList.add("marked");
           } else {
             const song = card.songs[index++];
@@ -164,7 +162,7 @@
     function switchDecade(decade) {
       if (!cards) return;
       currentDecade = decade;
-      localStorage.setItem("bingoLastDecade", decade);
+      localStorage.setItem(editionKey("bingoLastDecade"), decade);
       document.body.className = `bg-${decade}`;
       document.querySelectorAll("#decade-buttons button").forEach(b => b.classList.toggle("active", b.dataset.decade === decade));
       showPattern(getPattern(decade));
@@ -184,16 +182,16 @@
         </form>`;
       document.getElementById("batch-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        location.search = `?batch=${Number(document.getElementById("batch-input").value)}`;
+        location.href = editionLink("index.html", { batch: Number(document.getElementById("batch-input").value) });
       });
     }
 
     window.onload = () => {
       phoneCard = chooseCard();
       if (!phoneCard) { askForBatch(); return; }
-      history.replaceState(null, "", `?batch=${phoneCard.batch}`);
+      history.replaceState(null, "", editionLink(location.pathname, { batch: phoneCard.batch }));
       cards = cardsForPage(phoneCard.batch, phoneCard.page);
-      const last = localStorage.getItem("bingoLastDecade");
+      const last = localStorage.getItem(editionKey("bingoLastDecade"));
       switchDecade(allDecades.includes(last) ? last : allDecades[0]);
     };
   </script>

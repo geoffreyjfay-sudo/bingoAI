@@ -9,6 +9,7 @@
 <body>
   <h1>Decades Bingo Song Checklist</h1>
   <p id="service"></p>
+  <p id="edition-switch"></p>
   <div class="decade-buttons" id="decadeSelector"></div>
   <div id="counter"></div>
   <div id="pattern-bar">
@@ -46,7 +47,7 @@
       <label>Card # <input type="number" id="check-card" min="1" required></label>
       <button type="submit">Check</button>
     </form>
-    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 400). Songs are checked against what's been played in that card's game, for the pattern chosen for that game.</p>
+    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above <span id="printed-count">400</span>). Songs are checked against what's been played in that card's game, for the pattern chosen for that game.</p>
     <div id="card-check-result"></div>
   </details>
   <div id="checklist"></div>
@@ -61,7 +62,10 @@
     const service = new URLSearchParams(location.search).get("service") === "spotify" ? "spotify" : "apple";
     const other = service === "apple" ? "spotify" : "apple";
     document.getElementById("service").innerHTML =
-      `Links open in <strong>${SERVICES[service]}</strong> · <a href="?service=${other}">switch to ${SERVICES[other]}</a>`;
+      `Links open in <strong>${SERVICES[service]}</strong> · <a href="${editionLink("livelist.html", other === "spotify" ? { service: "spotify" } : {})}">switch to ${SERVICES[other]}</a>`;
+    document.getElementById("edition-switch").innerHTML = editionSwitcher("livelist.html");
+    document.title = document.querySelector("h1").textContent = `${EDITION.short} Song Checklist`;
+    document.getElementById("printed-count").textContent = CARDS_PER_BATCH;
 
     const withLinks = name => SONGS[name].map(s => [s.title, s[service]]);
     const decades = BATCH_DECADES.map(d => ({ name: d.name, key: d.key, original: withLinks(d.name) }));
@@ -141,13 +145,13 @@
 
     // --- Checking a printed card (batch + card number) against the songs played so far ---
     const checkBatch = document.getElementById("check-batch");
-    checkBatch.value = localStorage.getItem("bingoBatch") || "";
+    checkBatch.value = localStorage.getItem(editionKey("bingoBatch")) || "";
 
     document.getElementById("card-check-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const seed = Number(checkBatch.value);
       const number = Number(document.getElementById("check-card").value);
-      localStorage.setItem("bingoBatch", seed);
+      localStorage.setItem(editionKey("bingoBatch"), seed);
       shareBatch.value = seed;
       showShare();
       const out = document.getElementById("card-check-result");
@@ -206,7 +210,7 @@
 
     function playersLink() {
       const batch = Number(shareBatch.value);
-      return Number.isInteger(batch) && batch > 0 ? `${siteBase}?batch=${batch}` : null;
+      return Number.isInteger(batch) && batch > 0 ? siteBase + editionLink("", { batch }) : null;
     }
 
     function showShare() {
@@ -220,7 +224,7 @@
 
     shareBatch.addEventListener("input", () => {
       checkBatch.value = shareBatch.value;
-      if (playersLink()) localStorage.setItem("bingoBatch", shareBatch.value);
+      if (playersLink()) localStorage.setItem(editionKey("bingoBatch"), shareBatch.value);
       showShare();
     });
 
@@ -245,7 +249,7 @@
     showShare();
 
     function resetGame() {
-      if (!confirm("Start over? This clears the running order and every played song and pattern in all eight games.")) return;
+      if (!confirm(`Start over? This clears the running order and every played song and pattern in all ${GAMES} games of ${EDITION.short}.`)) return;
       decades.forEach(({ key }) => localStorage.removeItem(`bingoState_${key}`));
       location.reload();
     }
@@ -270,7 +274,7 @@
       section.dataset.key = key;
 
       const heading = document.createElement("h2");
-      heading.textContent = `${name} – Decades Bingo Song Checklist`;
+      heading.textContent = `${name} – ${EDITION.short} Song Checklist`;
       section.appendChild(heading);
 
       const grid = document.createElement("div");

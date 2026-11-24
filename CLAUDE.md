@@ -4,6 +4,19 @@ Music bingo for a live event ("Geoff & David's Decades Bingo Bash"). Eight games
 (1950s, 1960s, 1970s, 1980s, 1990s, 2000s, 2010s, 2020s), each with a pool of 50 songs. Players mark song titles on a 5×5 card
 (centre square FREE) as the host plays tracks.
 
+## Editions
+
+`EDITIONS` in `cards.js` defines each edition: title, header image, FREE emoji and its games
+(`id`, `name`, `class`, `key`, `emoji`). The Decades edition (above) is the default. The Christmas family
+edition has six games of 36 songs (Christmas Hits, Disney & Pixar, TV Themes, Movie Themes, Musicals,
+Party Dances; header `header_christmas.svg`). Every page takes `?edition=christmas` and keeps it in its
+links (`editionLink(page, params)`); `editionSwitcher(page)` shows links to each edition on the host
+pages; `<html>` gets class `edition-<id>` for styling. Game ids name phone state (`bingoState_<id>`) and
+colours in `bingoplay.css`; host state uses `key`. `editionKey(name)` suffixes shared keys
+(`bingoBatch`, `bingoPhoneCard`, `bingoLastDecade`) with `_christmas`. Batches are per edition: the same
+number gives different cards. `bingo.html` starts each player's set on a new sheet (Christmas: 4 + 2).
+For TV and Movie Themes the card title is the show or film and the link plays its theme or best-known song.
+
 Plain static HTML/CSS/JS — no build step, no package manager, no tests, and no internet needed: nothing
 is loaded from a CDN (keep it that way; the venue Wi-Fi may be poor). Only the song links go online. One exception: `index.html` loads GoatCounter's `count.js` (async, stats at https://geofffay.goatcounter.com); the card works without it. Serve the folder (the
 `static` config in `.claude/launch.json` runs `python3 -m http.server 8780`) and open the pages.
@@ -26,7 +39,7 @@ Players' link: `https://geoffreyjfay-sudo.github.io/bingoAI/?batch=<batch>`.
 ## Song data
 
 `songs.js` is the only song file. `SONGS["1970s"]` (etc.) is a list of
-`{ title, apple, spotify }`; it also defines `songs50/60/70/80/90/00/10/20` as plain title lists.
+`{ title, apple, spotify }`; it also defines `songs50/60/70/80/90/00/10/20` as plain title lists. The Christmas edition's games are added to `SONGS` at the end of the file (`Object.assign`), keyed by game name ("Christmas Hits" etc.).
 Apple links are to clean (or not-explicit) versions, and Spotify links avoid the explicit badge where
 there's a choice. The decade order everywhere comes from `BATCH_DECADES` in `cards.js`. Every page loads it.
 

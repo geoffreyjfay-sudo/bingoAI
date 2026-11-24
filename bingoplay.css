@@ -443,3 +443,42 @@ body {
     font-size: 0.7em;
   }
 }
+
+/* ---- Christmas edition (index.html?edition=christmas): one colour scheme per game ---- */
+body.bg-xmas-hits { background: linear-gradient(135deg, #b71c1c, #1b5e20); }
+body.bg-disney    { background: linear-gradient(135deg, #1a237e, #8e24aa); }
+body.bg-tv        { background: linear-gradient(135deg, #00838f, #283593); }
+body.bg-movies    { background: linear-gradient(135deg, #212121, #b8860b); }
+body.bg-musicals  { background: linear-gradient(135deg, #880e4f, #f57c00); }
+body.bg-party     { background: linear-gradient(135deg, #e91e63, #00bcd4); }
+
+body.bg-xmas-hits .marked { background-color: #c62828; color: #fff; }
+body.bg-disney .marked    { background-color: #5e35b1; color: #fff; }
+body.bg-tv .marked        { background-color: #00838f; color: #fff; }
+body.bg-movies .marked    { background-color: #b8860b; color: #fff; }
+body.bg-musicals .marked  { background-color: #ad1457; color: #fff; }
+body.bg-party .marked     { background-color: #e91e63; color: #fff; }
+
+#decade-buttons button[data-decade="xmas-hits"] { background-color: #c62828; }
+#decade-buttons button[data-decade="xmas-hits"]:hover { background-color: #e53935; }
+#decade-buttons button[data-decade="disney"] { background-color: #5e35b1; }
+#decade-buttons button[data-decade="disney"]:hover { background-color: #7e57c2; }
+#decade-buttons button[data-decade="tv"] { background-color: #00838f; }
+#decade-buttons button[data-decade="tv"]:hover { background-color: #0097a7; }
+#decade-buttons button[data-decade="movies"] { background-color: #424242; }
+#decade-buttons button[data-decade="movies"]:hover { background-color: #616161; }
+#decade-buttons button[data-decade="musicals"] { background-color: #ad1457; }
+#decade-buttons button[data-decade="musicals"]:hover { background-color: #c2185b; }
+#decade-buttons button[data-decade="party"] { background-color: #e65100; }
+#decade-buttons button[data-decade="party"]:hover { background-color: #f57c00; }
+
+/* Six games: three columns on a big screen */
+.edition-christmas #decade-buttons {
+  grid-template-columns: repeat(3, auto);
+}
+
+@media (max-width: 600px) {
+  .edition-christmas #decade-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+}

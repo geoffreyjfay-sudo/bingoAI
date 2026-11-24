@@ -49,6 +49,10 @@ body {
 .card-50s, .card-60s, .card-10s, .card-20s: pick colours here too if turning this on
 */
 
+/* Christmas edition: red and green card borders */
+.edition-christmas .card { border-color: #b71c1c; }
+.edition-christmas .card:nth-child(even) { border-color: #1b5e20; }
+
 .game-label {
   text-align: center;
   font-size: 1.8em;

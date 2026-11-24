@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Geoff & David’s Decades Bingo Bash</title>
+  <title>Bingo Cards</title>
   <link rel="stylesheet" href="bingo.css">
 </head>
 <body>
 <div class="batch-bar no-print">
+  <span id="edition-switch"></span>
   <span id="batch-info"></span>
   <button type="button" id="new-batch">New batch</button>
   <form id="find-card">
-    <label>Check card # <input type="number" id="find-card-number" min="1" max="400" required></label>
+    <label>Check card # <input type="number" id="find-card-number" min="1" required></label>
     <button type="submit">Show</button>
   </form>
   <span id="find-card-result"></span>
@@ -19,15 +20,18 @@
 <script src="cards.js"></script>
 <script>
   // Cards are built from a seed so a batch can be reproduced exactly: bingo.html?seed=48213 always
-  // gives the same 400 cards, checksums and report. Without ?seed= a new one is picked and added to
+  // gives the same cards (400 for Decades, 300 for Christmas), checksums and report. Without ?seed= a new one is picked and added to
   // the URL. The cards themselves come from generateBatch() in cards.js, which livelist.html also
   // uses to check winners.
   const params = new URLSearchParams(location.search);
   let seed = Number(params.get('seed'));
   if (!Number.isInteger(seed) || seed < 1) {
     seed = 10000 + Math.floor(Math.random() * 90000);
-    history.replaceState(null, '', `?seed=${seed}`);
+    history.replaceState(null, '', editionLink(location.pathname, { seed }));
   }
+  document.title = `${EDITION.title}: batch ${seed}`;
+  document.getElementById('find-card-number').max = CARDS_PER_BATCH;
+  document.getElementById('edition-switch').innerHTML = editionSwitcher('bingo.html');
 
   const decades = BATCH_DECADES.map(d => ({ name: d.name, songs: SONGS[d.name].map(s => s.title) }));
 
@@ -44,11 +48,14 @@
       const rowData = [];
       for (let col = 0; col < 5; col++) {
         if (row === 2 && col === 2) {
-          rowData.push(`<td class="free">😎<br><span style="color:${card.freeColor}; font-weight:bold;">FREE</span></td>`);
+          rowData.push(`<td class="free">${EDITION.free}<br><span style="color:${card.freeColor}; font-weight:bold;">FREE</span></td>`);
         } else {
           const song = card.songs[index++];
           const isBold = (row + col) % 2 === 0;
-          rowData.push(`<td>${isBold ? `<strong>${song}</strong>` : song}</td>`);
+          // Very long words (Supercalifragilisticexpialidocious) get soft hyphens so they can break
+          // without widening their column; only the printed text changes, not the title.
+          const shown = song.replace(/\S{17,}/g, w => w.match(/.{1,12}/g).join('&shy;'));
+          rowData.push(`<td>${isBold ? `<strong>${shown}</strong>` : shown}</td>`);
           const key = usageKey(card.decade, song);
           songUsage[key] = (songUsage[key] || 0) + 1;
         }
@@ -76,7 +83,7 @@
     const header = document.createElement('div');
     header.className = 'header';
     const img = new Image();
-    img.src = 'header.jpg';
+    img.src = EDITION.header;
     img.onload = () => {
       img.alt = 'Header Image';
       header.appendChild(img);
@@ -84,7 +91,7 @@
     };
     img.onerror = () => {
       const fallback = document.createElement('h1');
-      fallback.textContent = "Rock'n'Roll Bingo";
+      fallback.textContent = EDITION.title;
       header.appendChild(fallback);
       container.prepend(header);
     };
@@ -98,10 +105,14 @@
     document.body.appendChild(page);
   }
 
-  // Four cards to an A4 page: each player's eight cards (one per game) fill two sheets.
+  // Four cards to an A4 page, each player's set (one card per game) starting on a new sheet: Decades'
+  // eight fill two sheets; Christmas' six take one full sheet and half of the next.
   const batch = generateBatch(seed);
-  for (let i = 0; i < batch.length; i += 4) {
-    renderPage(batch.slice(i, i + 4).map(createCard).join(''));
+  for (let p = 0; p < batch.length; p += GAMES) {
+    const player = batch.slice(p, p + GAMES);
+    for (let i = 0; i < player.length; i += 4) {
+      renderPage(player.slice(i, i + 4).map(createCard).join(''));
+    }
   }
 
   const reportPage = document.createElement('div');
@@ -148,7 +159,8 @@
 
   report.innerHTML = `
     <h2>Bingo Card Report</h2>
-    <p><strong>Batch:</strong> ${seed} (reprint with bingo.html?seed=${seed}; phone players use index.html?batch=${seed})</p>
+    <p><strong>${EDITION.title}</strong></p>
+    <p><strong>Batch:</strong> ${seed} (reprint with ${editionLink('bingo.html', { seed })}; phone players use ${editionLink('index.html', { batch: seed })})</p>
     <p><strong>Generated:</strong> ${timestamp}</p>
     <p><strong>Total cards:</strong> ${checksumList.length}</p>
     <p><strong>Duplicate Checksums:</strong></p>
@@ -160,9 +172,9 @@
             return `Card #${cardNum} (${detail.decade}): ${detail.songs.join(', ')}`;
           }).join('<br>') + '</li>';
       }).join('') + '</ul>'}
-    <p><strong>Song Usage Count by Decade:</strong></p>
+    <p><strong>Song Usage Count by Game:</strong></p>
     ${renderUsageByDecade()}
-    <p><strong>Unused Songs by Decade:</strong></p>
+    <p><strong>Unused Songs by Game:</strong></p>
     ${renderUnusedSongs()}
     ${renderTopSongs()}
   `;
@@ -172,12 +184,12 @@
 
   // On-screen tools (hidden when printing).
   document.getElementById('batch-info').innerHTML =
-    `<strong>Batch ${seed}</strong> · ${checksumList.length} cards · reopen this page with <code>?seed=${seed}</code> to reprint exactly these cards` +
-    ` · phone players: <a href="index.html?batch=${seed}" target="_blank">index.html?batch=${seed}</a>`;
+    `<strong>Batch ${seed}</strong> · ${checksumList.length} cards · reopen this page with <code>${editionLink('', { seed })}</code> to reprint exactly these cards` +
+    ` · phone players: <a href="${editionLink('index.html', { batch: seed })}" target="_blank">${editionLink('index.html', { batch: seed })}</a>`;
 
   document.getElementById('new-batch').addEventListener('click', () => {
     if (confirm(`Make a new batch? Cards from batch ${seed} won't match the new ones — keep this number if you've printed them.`)) {
-      location.search = '';
+      location.href = editionLink(location.pathname);
     }
   });
 
