@@ -4,8 +4,8 @@ Music bingo for a live event ("Geoff & David's Decades Bingo Bash"). Four games,
 (1970s, 1980s, 1990s, 2000s), each with a pool of 50 songs. Players mark song titles on a 5×5 card
 (centre square FREE) as the host plays tracks.
 
-Plain static HTML/CSS/JS — no build step, no package manager, no tests. Open the `.html` files
-directly in a browser (or serve the folder with `python3 -m http.server`).
+Plain static HTML/CSS/JS — no build step, no package manager, no tests. Serve the folder (the
+`static` config in `.claude/launch.json` runs `python3 -m http.server 8780`) and open the pages.
 
 ## Pages
 
@@ -19,7 +19,7 @@ directly in a browser (or serve the folder with `python3 -m http.server`).
 
 ## Data files
 
-- `song_arrays.js` — `songs70/80/90/00` as plain title arrays. Used by `bingo.html` and `index.html`.
+- `song_arrays.js` — `songs70/80/90/00` as plain title arrays. Used by `bingo.html`, `index.html` and `checklist.html`.
 - `list_links.js` — same songs as `[title, appleMusicUrl]` pairs.
 - `list_links_spot.js` — same songs as `[title, spotifyUrl]` pairs.
 
@@ -34,9 +34,6 @@ positions 1–25 across the grid and position 13 (FREE) skipped. Used to verify 
 
 ## Known quirks
 
-- `checklist.html` is broken: it loads `list_links.js` (title/link pairs) but sorts with
-  `a.localeCompare(b)` on arrays, which throws, so the page renders blank. It should load
-  `song_arrays.js` instead.
 - `index.html` shuffles with `sort(() => Math.random() - 0.5)` (biased) and mutates the shared song
   array; `bingo.html` uses a proper Fisher–Yates copy.
 - `index.html` always resumes on the 1970s game on reload regardless of which decade was active.
