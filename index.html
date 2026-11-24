@@ -126,6 +126,7 @@
 
     function switchDecade(decade) {
       currentDecade = decade;
+      localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
       const key = `bingoState_${decade}`;
       const saved = JSON.parse(localStorage.getItem(key));
@@ -140,29 +141,21 @@
       allDecades.forEach(decade => {
         localStorage.removeItem(`bingoState_${decade}`);
       });
+      localStorage.removeItem("bingoLastDecade");
     }
 
     window.onload = () => {
-      document.body.className = "bg-1970s";
       const savedAny = allDecades.some(decade => {
         const state = JSON.parse(localStorage.getItem(`bingoState_${decade}`));
         return state && state.songs;
       });
 
-      if (savedAny) {
-        if (confirm("Continue your previous game?")) {
-          const saved = JSON.parse(localStorage.getItem(`bingoState_1970s`));
-          if (saved && saved.songs) {
-            resumeGame("1970s", saved);
-          } else {
-            startGame("1970s");
-          }
-        } else {
-          clearAllGames();
-          startGame("1970s");
-        }
+      if (savedAny && confirm("Continue your previous game?")) {
+        const last = localStorage.getItem("bingoLastDecade");
+        switchDecade(allDecades.includes(last) ? last : "1970s");
       } else {
-        startGame("1970s");
+        clearAllGames();
+        switchDecade("1970s");
       }
     };
   </script>
