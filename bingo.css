@@ -1,46 +1,7 @@
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #fff;
-  color: #333;
-  margin: 0;
-  padding: 0;
-}
-
-.page {
-  width: 210mm;
-  height: 297mm;
-  padding: 20px;
-  box-sizing: border-box;
-  page-break-after: always;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.header img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 20px;
-}
-
-.card {
-  border: 2px solid #333;
-  padding: 10px;
-  background: #f9f9f9;
-}
+/* Printable bingo cards (bingo.html). One A4 page holds four cards, one per decade. */
 
 body {
-  font-family: 'HELVETICA';
+  font-family: Helvetica, Arial, sans-serif;
   background: #fff;
   color: #333;
   margin: 0;
@@ -64,7 +25,7 @@ body {
   max-width: 125%;
   height: auto;
   display: block;
-  margin: 5 auto;
+  margin: 0 auto;
 }
 
 .grid {
@@ -79,24 +40,14 @@ body {
   padding: 5px;
   background: #f9f9f9;
 }
-/*
-.card-70s {
-  background-color: #FFFACD; 
-}
 
-.card-80s {
-  background-color: #ADD8E6; 
-}
-
-.card-90s {
-  background-color: #98FB98; 
-}
-
-.card-00s {
-  background-color: #E6E6FA; 
-}
-
+/* Optional per-decade card colours (currently off):
+.card-70s { background-color: #FFFACD; }
+.card-80s { background-color: #ADD8E6; }
+.card-90s { background-color: #98FB98; }
+.card-00s { background-color: #E6E6FA; }
 */
+
 .game-label {
   text-align: center;
   font-size: 1.8em;
@@ -155,24 +106,6 @@ td {
 canvas {
   max-width: 100%;
   margin-top: 20px;
-}
-
-.song-item label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.song-item input[type="checkbox"] {
-  transform: scale(1.2);
-  cursor: pointer;
-}
-
-.disabled-link {
-  pointer-events: none;
-  color: #999;
-  text-decoration: line-through;
 }
 
 /* On-screen batch bar (not printed) */

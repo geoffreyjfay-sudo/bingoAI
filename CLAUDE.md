@@ -46,6 +46,3 @@ Changing the song lists also changes what a seed produces. The on-screen bar (hi
 Every page that randomises songs (`bingo.html`, `index.html`, `livelist*.html`) uses Fisher–Yates on
 a copy of the list. Don't use `sort(() => Math.random() - 0.5)`: it's biased.
 
-## Known quirks
-
-- `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
