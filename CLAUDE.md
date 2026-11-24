@@ -39,7 +39,9 @@ a copy of the list. Don't use `sort(() => Math.random() - 0.5)`: it's biased.
 
 ## Known quirks
 
-- `list_links_spot.js` only has Spotify links for the 1970s and 1980s; the 1990s and 2000s entries
-  (100 songs) are still Apple Music links, so `livelist_spot.html` opens Apple Music for those games.
+- `livelist.html` and `livelist_spot.html` save the running order *with its links* under the same
+  `localStorage` keys (`bingoState_songs70` etc.). So a saved order keeps whatever links it was
+  created with: open the Apple page, then the Spotify page, and "Continue" shows Apple links (and
+  edits to the link files don't show up until "Start Over").
 - `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
 - Printed card numbers/checksums from `bingo.html` are random per load — reprinting gives different cards.
