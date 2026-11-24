@@ -112,17 +112,40 @@ const PATTERNS = (() => {
     pairs.push({ name: `${a.name} + ${b.name}`, cells: unionOf(a.cells, b.cells) })));
   const diagonals = BINGO_LINES.filter(l => l.name.startsWith("Diagonal")).map(l => l.cells);
   return [
-    { id: "line", name: "Any line", shout: "BINGO!", shapes: BINGO_LINES },
-    { id: "two-lines", name: "Two lines", shout: "TWO LINES!", shapes: pairs },
-    { id: "corners", name: "Four corners", shout: "FOUR CORNERS!", shapes: [{ name: "Four corners", cells: [0, 4, 20, 24] }] },
-    { id: "x", name: "X (both diagonals)", shout: "X MARKS THE SPOT!", shapes: [{ name: "X", cells: unionOf(...diagonals) }] },
-    { id: "full", name: "Full house", shout: "FULL HOUSE!", shapes: [{ name: "Full house", cells: [...Array(25).keys()] }] }
+    { id: "line", name: "Any line", short: "Line", icon: [10, 11, 12, 13, 14], shout: "BINGO!", shapes: BINGO_LINES },
+    { id: "two-lines", name: "Two lines", short: "2 lines", icon: [5, 6, 7, 8, 9, 15, 16, 17, 18, 19], shout: "TWO LINES!", shapes: pairs },
+    { id: "corners", name: "Four corners", short: "Corners", icon: [0, 4, 20, 24], shout: "FOUR CORNERS!", shapes: [{ name: "Four corners", cells: [0, 4, 20, 24] }] },
+    { id: "x", name: "X (both diagonals)", short: "X", icon: unionOf(...diagonals), shout: "X MARKS THE SPOT!", shapes: [{ name: "X", cells: unionOf(...diagonals) }] },
+    { id: "full", name: "Full house", short: "Full house", icon: [...Array(25).keys()], shout: "FULL HOUSE!", shapes: [{ name: "Full house", cells: [...Array(25).keys()] }] }
   ];
 })();
 const DEFAULT_PATTERN = "line";
 
 function patternById(id) {
   return PATTERNS.find(p => p.id === id) || PATTERNS.find(p => p.id === DEFAULT_PATTERN);
+}
+
+// A mini 5×5 card with the pattern's squares lit (`icon` is one example shape), for the pattern buttons.
+function patternIcon(pattern) {
+  const on = new Set(pattern.icon);
+  return `<span class="pattern-icon" aria-hidden="true">` +
+    [...Array(25).keys()].map(i => `<i class="${on.has(i) ? "on" : ""}"></i>`).join("") + `</span>`;
+}
+
+// Fills `container` with one button per pattern (icon + short name). Clicking one calls onPick(id).
+// Returns setActive(id), which highlights the pattern in play.
+function renderPatternButtons(container, onPick) {
+  container.innerHTML = PATTERNS.map(p =>
+    `<button type="button" data-pattern="${p.id}" role="radio" aria-checked="false" aria-label="${p.name}" title="${p.name}">` +
+    `${patternIcon(p)}<span>${p.short}</span></button>`).join("");
+  const buttons = [...container.querySelectorAll("button")];
+  const setActive = id => buttons.forEach(b => {
+    const on = b.dataset.pattern === id;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-checked", on);
+  });
+  buttons.forEach(b => b.addEventListener("click", () => { setActive(b.dataset.pattern); onPick(b.dataset.pattern); }));
+  return setActive;
 }
 
 // Checks a card against a pattern. Returns { pattern, won: completed shape names, cells: grid indexes

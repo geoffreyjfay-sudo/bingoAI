@@ -22,7 +22,8 @@
     <button data-decade="2020s" onclick="switchDecade('2020s')">🔊 GAME 8 : <b>2020s</b></button>
   </div>
   <div id="pattern-bar">
-    <label>Playing for <select id="pattern-select"></select></label>
+    <div class="pattern-title">Playing for</div>
+    <div id="pattern-buttons" role="radiogroup" aria-label="Playing for"></div>
     <span class="small">change it when the host announces</span>
   </div>
 </div>
@@ -48,10 +49,8 @@
     let currentCard = null;
     let tileEls = [];     // the 25 squares on screen, row by row
     let shownWins = 0;    // completed shapes last time we looked, to celebrate only new ones
-    const patternSelect = document.getElementById("pattern-select");
-    patternSelect.innerHTML = PATTERNS.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
-    patternSelect.addEventListener("change", () => {
-      localStorage.setItem(`bingoPattern_${currentDecade}`, patternSelect.value);
+    const showPattern = renderPatternButtons(document.getElementById("pattern-buttons"), id => {
+      localStorage.setItem(`bingoPattern_${currentDecade}`, id);
       shownWins = 0;
       updateWin(true);
     });
@@ -165,7 +164,7 @@
       localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
       document.querySelectorAll("#decade-buttons button").forEach(b => b.classList.toggle("active", b.dataset.decade === decade));
-      patternSelect.value = getPattern(decade);
+      showPattern(getPattern(decade));
       renderCard(cards[allDecades.indexOf(decade)], getMarks(decade));
       shownWins = 0;
       updateWin(false);

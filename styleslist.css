@@ -229,10 +229,62 @@ button.action {
   margin-bottom: 10px;
 }
 
-#pattern-bar select {
-  font-size: 1em;
-  padding: 4px 8px;
-  margin-left: 4px;
+#pattern-bar .pattern-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Pattern buttons: a mini card showing the squares needed, the one in play highlighted */
+#pattern-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#pattern-buttons button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 62px;
+  margin: 0;
+  padding: 6px 6px 5px;
+  border: 2px solid #d5dbe0;
+  border-radius: 10px;
+  background: #fff;
+  color: #34495e;
+  font-size: 0.78em;
+  cursor: pointer;
+}
+
+#pattern-buttons button:hover {
+  background: #f4f6f8;
+}
+
+#pattern-buttons button.active {
+  border-color: #ffb300;
+  background: #fff6cc;
+  box-shadow: 0 0 0 2px #ffd600;
+  font-weight: 700;
+}
+
+.pattern-icon {
+  display: inline-grid;
+  grid-template-columns: repeat(5, 6px);
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.pattern-icon i {
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: #d5dbe0;
+}
+
+.pattern-icon i.on {
+  background: #e53935;
 }
 
 #pattern-bar .hint {

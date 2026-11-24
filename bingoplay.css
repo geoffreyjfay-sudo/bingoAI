@@ -246,13 +246,62 @@ body.bg-2020s .marked {
   color: #34495e;
 }
 
-#pattern-bar select {
-  font-size: 1em;
-  padding: 6px 8px;
-  margin-left: 4px;
-  border-radius: 8px;
-  border: 2px solid #ffd600;
+#pattern-bar .pattern-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Pattern buttons: a mini card showing the squares needed, the one in play highlighted */
+#pattern-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+#pattern-buttons button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 62px;
+  margin: 0;
+  padding: 6px 6px 5px;
+  border: 2px solid #d5dbe0;
+  border-radius: 10px;
   background: #fff;
+  color: #34495e;
+  font-size: 0.78em;
+  cursor: pointer;
+}
+
+#pattern-buttons button:hover {
+  background: #f4f6f8;
+}
+
+#pattern-buttons button.active {
+  border-color: #ffb300;
+  background: #fff6cc;
+  box-shadow: 0 0 0 2px #ffd600;
+  font-weight: 700;
+}
+
+.pattern-icon {
+  display: inline-grid;
+  grid-template-columns: repeat(5, 6px);
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.pattern-icon i {
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  background: #d5dbe0;
+}
+
+.pattern-icon i.on {
+  background: #e53935;
 }
 
 #pattern-bar .small {
@@ -380,5 +429,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #win-banner.pop {
     animation: none;
+  }
+}
+
+/* Small phones: keep the five pattern buttons on one row */
+@media (max-width: 360px) {
+  #pattern-buttons {
+    gap: 4px;
+  }
+  #pattern-buttons button {
+    min-width: 52px;
+    padding: 5px 3px 4px;
+    font-size: 0.7em;
   }
 }
