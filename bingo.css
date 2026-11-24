@@ -153,3 +153,7 @@ canvas {
     outline: none;
   }
 }
+
+.batch-bar a {
+  color: #ffea00;
+}

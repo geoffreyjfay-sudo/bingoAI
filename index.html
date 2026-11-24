@@ -28,70 +28,69 @@
   <div id="checksum"></div>
 
   <script src="songs.js"></script>
+  <script src="cards.js"></script>
   <script>
+    // Phone cards come from the same numbered batch as the printed ones (see cards.js), so the host
+    // can check them with "Check a Card". Players open the link the host shares, e.g.
+    // index.html?batch=54321. The phone picks a random page from 51 up (four cards, one per decade)
+    // and keeps it; &page= picks a specific one. A new batch means a new card and fresh marks.
     const bingoGrid = document.getElementById("bingo");
     const checksumDisplay = document.getElementById("checksum");
     const allDecades = ["1970s", "1980s", "1990s", "2000s"];
     let currentDecade = "1970s";
+    let phoneCard = null; // { batch, page }
+    let cards = null;     // the page's four cards, in decade order
 
-    // Fisher–Yates on a copy: every ordering equally likely, shared song list left untouched.
-    function shuffle(array) {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
+    function randomPage() {
+      return FIRST_PHONE_PAGE + Math.floor(Math.random() * (LAST_PHONE_PAGE - FIRST_PHONE_PAGE + 1));
     }
 
-    function getSongs(decade) {
-      switch (decade) {
-        case "1970s": return songs70;
-        case "1980s": return songs80;
-        case "1990s": return songs90;
-        case "2000s": return songs00;
-        default: return [];
-      }
+    function chooseCard() {
+      const params = new URLSearchParams(location.search);
+      const urlBatch = Number(params.get("batch"));
+      const urlPage = Number(params.get("page"));
+      const saved = JSON.parse(localStorage.getItem("bingoPhoneCard"));
+      const validBatch = Number.isInteger(urlBatch) && urlBatch > 0;
+      const validPage = Number.isInteger(urlPage) && urlPage > 0;
+
+      if (!validBatch) return saved; // no batch in the link: carry on with the saved card, if any
+
+      if (saved && saved.batch === urlBatch && (!validPage || saved.page === urlPage)) return saved;
+      const card = { batch: urlBatch, page: validPage ? urlPage : randomPage() };
+      clearMarks();
+      localStorage.setItem("bingoPhoneCard", JSON.stringify(card));
+      return card;
     }
 
-    function titleValue(title) {
-      return [...title].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    function getMarks(decade) {
+      return (JSON.parse(localStorage.getItem(`bingoState_${decade}`)) || {}).marked || [];
     }
 
-    function calculateChecksum(songs) {
-      let checksum = 0;
-      let position = 1;
-      for (let i = 0; i < 25; i++) {
-        if (i === 12) {
-          position++;
-          continue;
-        }
-        const song = songs[i < 12 ? i : i - 1];
-        checksum += titleValue(song) * position;
-        position++;
-      }
-      return checksum;
+    function updateStorage(decade, song, isMarked) {
+      const marked = getMarks(decade).filter(s => s !== song);
+      if (isMarked) marked.push(song);
+      localStorage.setItem(`bingoState_${decade}`, JSON.stringify({ marked }));
     }
 
-    function renderCard(songs, marked) {
+    function clearMarks() {
+      allDecades.forEach(decade => localStorage.removeItem(`bingoState_${decade}`));
+    }
+
+    function renderCard(card, marked) {
       bingoGrid.innerHTML = "";
       let index = 0;
-      const cardSongs = [];
-
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
           const i = row * 5 + col;
           const tile = document.createElement("div");
           tile.className = "tile";
-
           const isBold = (row + col) % 2 === 0;
 
-          if (i === 12) {
+          if (i === FREE_SQUARE) {
             tile.innerHTML = "<span class='bold'>😎 FREE</span>";
             tile.classList.add("marked");
           } else {
-            const song = songs[index++];
-            cardSongs.push(song);
+            const song = card.songs[index++];
             tile.innerHTML = isBold ? `<span class='bold'>${song}</span>` : song;
             if (marked.includes(song)) tile.classList.add("marked");
             tile.onclick = () => {
@@ -99,70 +98,44 @@
               updateStorage(currentDecade, song, tile.classList.contains("marked"));
             };
           }
-
           bingoGrid.appendChild(tile);
         }
       }
-
-      const checksum = calculateChecksum(cardSongs);
-      checksumDisplay.textContent = `Checksum: ${checksum}`;
-    }
-
-    function updateStorage(decade, song, isMarked) {
-      const key = `bingoState_${decade}`;
-      const saved = JSON.parse(localStorage.getItem(key)) || { songs: [], marked: [] };
-      if (isMarked) {
-        saved.marked = [...new Set([...(saved.marked || []), song])];
-      } else {
-        saved.marked = (saved.marked || []).filter(s => s !== song);
-      }
-      localStorage.setItem(key, JSON.stringify(saved));
-    }
-
-    function startGame(decade) {
-      const songs = shuffle(getSongs(decade)).slice(0, 24);
-      const state = { songs, marked: [] };
-      localStorage.setItem(`bingoState_${decade}`, JSON.stringify(state));
-      renderCard(state.songs, []);
-    }
-
-    function resumeGame(decade, state) {
-      renderCard(state.songs, state.marked || []);
+      checksumDisplay.innerHTML =
+        `<strong>Card ${card.number}</strong> · Batch ${phoneCard.batch} · Checksum ${card.checksum}<br>` +
+        `<span class="small">Shout BINGO and give the host your card number.</span>`;
     }
 
     function switchDecade(decade) {
+      if (!cards) return;
       currentDecade = decade;
       localStorage.setItem("bingoLastDecade", decade);
       document.body.className = `bg-${decade}`;
-      const key = `bingoState_${decade}`;
-      const saved = JSON.parse(localStorage.getItem(key));
-      if (saved && saved.songs) {
-        resumeGame(decade, saved);
-      } else {
-        startGame(decade);
-      }
+      renderCard(cards[allDecades.indexOf(decade)], getMarks(decade));
     }
 
-    function clearAllGames() {
-      allDecades.forEach(decade => {
-        localStorage.removeItem(`bingoState_${decade}`);
+    function askForBatch() {
+      document.getElementById("controls").hidden = true;
+      bingoGrid.className = "ask";
+      bingoGrid.innerHTML = `
+        <form id="batch-form">
+          <p>Enter the batch number your host gave you.</p>
+          <input type="number" id="batch-input" min="1" inputmode="numeric" required>
+          <button type="submit">Get my card</button>
+        </form>`;
+      document.getElementById("batch-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        location.search = `?batch=${Number(document.getElementById("batch-input").value)}`;
       });
-      localStorage.removeItem("bingoLastDecade");
     }
 
     window.onload = () => {
-      const savedAny = allDecades.some(decade => {
-        const state = JSON.parse(localStorage.getItem(`bingoState_${decade}`));
-        return state && state.songs;
-      });
-
-      if (savedAny && confirm("Continue your previous game?")) {
-        const last = localStorage.getItem("bingoLastDecade");
-        switchDecade(allDecades.includes(last) ? last : "1970s");
-      } else {
-        clearAllGames();
-        switchDecade("1970s");
-      }
+      phoneCard = chooseCard();
+      if (!phoneCard) { askForBatch(); return; }
+      history.replaceState(null, "", `?batch=${phoneCard.batch}`);
+      cards = cardsForPage(phoneCard.batch, phoneCard.page);
+      const last = localStorage.getItem("bingoLastDecade");
+      switchDecade(allDecades.includes(last) ? last : "1970s");
     };
   </script>
 

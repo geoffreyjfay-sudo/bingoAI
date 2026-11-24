@@ -19,10 +19,10 @@
     <h2>Check a Card</h2>
     <form id="card-check-form">
       <label>Batch <input type="number" id="check-batch" min="1" required></label>
-      <label>Card # <input type="number" id="check-card" min="1" max="200" required></label>
+      <label>Card # <input type="number" id="check-card" min="1" required></label>
       <button type="submit">Check</button>
     </form>
-    <p class="hint">Batch and card number are printed under each card. Songs are checked against what's been played in that card's game.</p>
+    <p class="hint">Batch and card number are under each printed card and on players' phones (phone cards are numbered above 200). Songs are checked against what's been played in that card's game.</p>
     <div id="card-check-result"></div>
   </section>
   <div id="checklist"></div>
@@ -106,7 +106,6 @@
     }
 
     // --- Checking a printed card (batch + card number) against the songs played so far ---
-    const batchCache = {};
     const checkBatch = document.getElementById("check-batch");
     checkBatch.value = localStorage.getItem("bingoBatch") || "";
 
@@ -115,10 +114,9 @@
       const seed = Number(checkBatch.value);
       const number = Number(document.getElementById("check-card").value);
       localStorage.setItem("bingoBatch", seed);
-      const cards = batchCache[seed] = batchCache[seed] || generateBatch(seed);
-      const card = cards[number - 1];
       const out = document.getElementById("card-check-result");
-      if (!card) { out.textContent = `There is no card ${number}.`; return; }
+      if (number > LAST_PHONE_PAGE * 4) { out.textContent = `There is no card ${number}.`; return; }
+      const card = cardByNumber(seed, number);
 
       const decadeKey = BATCH_DECADES.find(d => d.name === card.decade).key;
       const { marked = [] } = JSON.parse(localStorage.getItem(`bingoState_${decadeKey}`)) || {};
@@ -136,7 +134,7 @@
 
       out.innerHTML = `
         ${verdict}
-        <p>Card ${card.number} · Batch ${seed} · <strong>Game ${card.game}: ${card.decade}</strong> · Checksum ${card.checksum}
+        <p>Card ${card.number} (${card.number <= CARDS_PER_BATCH ? "printed" : "phone"}) · Batch ${seed} · <strong>Game ${card.game}: ${card.decade}</strong> · Checksum ${card.checksum}
            — ask the player to read out their checksum to confirm it's the same card.</p>
         <p>${marked.length} song${marked.length === 1 ? "" : "s"} played so far in the ${card.decade} game.</p>
         <table class="check-grid">${rows}</table>`;

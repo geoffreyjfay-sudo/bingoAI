@@ -134,7 +134,7 @@
 
   report.innerHTML = `
     <h2>Bingo Card Report</h2>
-    <p><strong>Batch:</strong> ${seed} (reprint with bingo.html?seed=${seed})</p>
+    <p><strong>Batch:</strong> ${seed} (reprint with bingo.html?seed=${seed}; phone players use index.html?batch=${seed})</p>
     <p><strong>Generated:</strong> ${timestamp}</p>
     <p><strong>Total cards:</strong> ${checksumList.length}</p>
     <p><strong>Duplicate Checksums:</strong></p>
@@ -158,7 +158,8 @@
 
   // On-screen tools (hidden when printing).
   document.getElementById('batch-info').innerHTML =
-    `<strong>Batch ${seed}</strong> · ${checksumList.length} cards · reopen this page with <code>?seed=${seed}</code> to reprint exactly these cards`;
+    `<strong>Batch ${seed}</strong> · ${checksumList.length} cards · reopen this page with <code>?seed=${seed}</code> to reprint exactly these cards` +
+    ` · phone players: <a href="index.html?batch=${seed}" target="_blank">index.html?batch=${seed}</a>`;
 
   document.getElementById('new-batch').addEventListener('click', () => {
     if (confirm(`Make a new batch? Cards from batch ${seed} won't match the new ones — keep this number if you've printed them.`)) {
