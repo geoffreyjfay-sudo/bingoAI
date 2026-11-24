@@ -5,7 +5,7 @@ Music bingo for a live event ("Geoff & David's Decades Bingo Bash"). Eight games
 (centre square FREE) as the host plays tracks.
 
 Plain static HTML/CSS/JS — no build step, no package manager, no tests, and no internet needed: nothing
-is loaded from a CDN (keep it that way; the venue Wi-Fi may be poor). Only the song links go online. Serve the folder (the
+is loaded from a CDN (keep it that way; the venue Wi-Fi may be poor). Only the song links go online. One exception: `index.html` loads GoatCounter's `count.js` (async, stats at https://geofffay.goatcounter.com); the card works without it. Serve the folder (the
 `static` config in `.claude/launch.json` runs `python3 -m http.server 8780`) and open the pages.
 
 Live site: GitHub Pages serves `main` (repo is public for this) at
