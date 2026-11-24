@@ -32,6 +32,15 @@ strings, including curly vs straight apostrophes). Edit all three together when 
 positions 1–25 across the grid and position 13 (FREE) skipped. Used to verify a winning card —
 `bingo.html` and `index.html` must keep the same algorithm.
 
+## Batches (`bingo.html`)
+
+Printed cards come from a seed in the URL: `bingo.html?seed=54321` always produces the same 200
+cards, checksums and report. With no `?seed=` a 5-digit one is picked and written into the URL. The
+batch number is printed on every card and on the report. All randomness in `bingo.html` must go
+through `random()` (the seeded generator), never `Math.random()`, or batches stop being reproducible.
+Changing the song lists also changes what a seed produces. The on-screen bar (hidden in print) has
+"New batch" and a "Check card #" lookup.
+
 ## Shuffling
 
 Every page that randomises songs (`bingo.html`, `index.html`, `livelist*.html`) uses Fisher–Yates on
@@ -40,4 +49,3 @@ a copy of the list. Don't use `sort(() => Math.random() - 0.5)`: it's biased.
 ## Known quirks
 
 - `bingo.css` contains a duplicated block of rules (second copy wins); `margin: 5 auto` is invalid.
-- Printed card numbers/checksums from `bingo.html` are random per load — reprinting gives different cards.
